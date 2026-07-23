@@ -1,0 +1,13 @@
+# Python Önbellekleri
+__pycache__/
+*.pyc
+
+# Derleme Klasörleri
+.pybuild/
+build/
+*.egg-info/
+
+# Debian Paket Çıktıları
+*.deb
+*.buildinfo
+*.changes

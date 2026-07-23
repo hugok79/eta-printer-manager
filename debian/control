@@ -1,0 +1,12 @@
+Source: pardus-printers
+Section: utils
+Priority: optional
+Maintainer: Pardus Developers <info@pardus.org.tr>
+Build-Depends: debhelper-compat (= 12), meson
+Standards-Version: 4.5.0
+
+Package: pardus-printers
+Architecture: all
+Depends: ${misc:Depends}, ${python3:Depends}, python3, python3-gi, python3-cups
+Description: Pardus Printer and Scanner Management Application
+ Simple and modern GUI tool for managing printers and scanners in Pardus.

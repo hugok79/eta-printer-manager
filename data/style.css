@@ -1,0 +1,111 @@
+/* Ana Pencere ve Arka Plan */
+window {
+    background-color: #f9f9fb;
+    font-family: "Segoe UI", "Cantarell", "Ubuntu", sans-serif;
+}
+
+headerbar {
+    background-color: #f9f9fb;
+    border-bottom: none;
+    box-shadow: none;
+}
+
+/* Üst Sağ Simge Butonları */
+.top-icon-btn {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    border-radius: 50%;
+    padding: 6px;
+}
+
+.top-icon-btn:hover {
+    background-color: #e3e5e8;
+}
+
+/* Ana Sayfa Başlıkları */
+.main-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 18px;
+}
+
+.section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-top: 12px;
+    margin-bottom: 12px;
+}
+
+/* Windows 11 Kart Yapıları */
+.add-device-card,
+.device-card {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 10px;
+}
+
+/* Yazı Stilleri */
+.card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f1f1f;
+}
+
+.card-subtitle {
+    font-size: 12px;
+    color: #616161;
+}
+
+/* Windows 11 Mavi Birincil Buton (Cihaz Ekle) */
+.btn-primary {
+    background-color: #0067c0;
+    color: #ffffff;
+    font-weight: 600;
+    border-radius: 6px;
+    padding: 8px 18px;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #005a9e;
+}
+
+/* İkincil Aksiyon Butonları (Kuyruğu Aç, Sınama vb.) */
+.btn-secondary {
+    background-color: #fcfcfc;
+    color: #1a1a1a;
+    border: 1px solid #d1d1d1;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.btn-secondary:hover {
+    background-color: #f0f0f0;
+}
+
+/* Kırmızı Sil Butonu (Kaldır) */
+.btn-danger {
+    background-color: #c42b1c;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.btn-danger:hover {
+    background-color: #a82317;
+}
+
+/* Mavi Cihaz Simgesi */
+.blue-icon {
+    color: #0067c0;
+}
