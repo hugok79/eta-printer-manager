@@ -12,7 +12,7 @@ from src.locale_config import _
 
 def load_css():
     css_provider = Gtk.CssProvider()
-    css_path = "/usr/share/pardus/pardus-printers/data/style.css"
+    css_path = "/usr/share/pardus/eta-printer-manager/data/style.css"
     if not os.path.exists(css_path):
         css_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "style.css")
         if not os.path.exists(css_path):
