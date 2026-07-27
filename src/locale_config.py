@@ -2,7 +2,7 @@ import gettext
 import os
 import locale
 
-APP_NAME = "pardus-printers"
+APP_NAME = "eta-printer-manager"
 LOCALE_DIR = "/usr/share/locale"
 
 # Geliştirme aşamasında yerel dizini de kontrol etmesi için

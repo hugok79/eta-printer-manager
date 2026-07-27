@@ -1,0 +1,2 @@
+#!/bin/bash
+cd /usr/share/pardus/eta-printer-manager && exec python3 -m src.main "$@"

@@ -1,7 +1,7 @@
 import sys
 import os
 
-# Kök dizini (/usr/share/pardus/pardus-printers) Python yoluna ekle
+# Kök dizini (/usr/share/pardus/eta-printer-manager) Python yoluna ekle
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import gi

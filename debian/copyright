@@ -1,7 +1,7 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: pardus-printers
+Upstream-Name: eta-printer-manager
 Upstream-Contact: Pardus Developers <dev@pardus.org.tr>
-Source: https://github.com/pardus/pardus-printers
+Source: https://github.com/pardus/eta-printer-manager
 
 
 Files: *
