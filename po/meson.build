@@ -1,1 +1,1 @@
-i18n.gettext('eta-printer-manager', preset: 'glib')
+i18n.gettext('pardus-printers', preset: 'glib')

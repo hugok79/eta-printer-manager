@@ -8,7 +8,7 @@ from src.locale_config import _
 class NotificationManager:
     def __init__(self):
         # libnotify sistemini uygulama adıyla ilklendir
-        Notify.init("eta-printer-manager")
+        Notify.init("pardus-printers")
 
     def notify(self, title, message):
         """Yerel Pardus/Debian bildirim balonunu tetikler"""

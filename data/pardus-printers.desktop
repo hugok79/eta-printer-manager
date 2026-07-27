@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Pardus Printers
+Comment=Pardus Printer Manager
+Exec=pardus-printers
+Icon=pardus-printers
+Terminal=false
+Type=Application
+Categories=GNOME;GTK;Utility;HardwareSettings;

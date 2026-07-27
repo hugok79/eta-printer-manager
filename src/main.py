@@ -1,9 +1,14 @@
 import sys
+import os
+
+# Kök dizini (/usr/share/pardus/pardus-printers) Python yoluna ekle
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
-# Modülleri 'src' ve 'ui' altından çağırıyoruz
+# Modül importları
 from src.cups_backend import CupsBackend
 from src.scanner_backend import ScannerBackend
 from ui.ui import MainWindow
