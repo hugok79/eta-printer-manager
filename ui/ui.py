@@ -353,7 +353,18 @@ class DeviceCard(Gtk.Box):
 
     def _action_set_default(self):
         print(f"{self.name} varsayılan yapılıyor...")
-        self.parent_window.cups.set_default_printer(self.name)
+        # 1. Backend çağrısı
+        if hasattr(self.parent_window.cups, 'set_default_printer'):
+            self.parent_window.cups.set_default_printer(self.name)
+        
+        # 2. Linux kullanıcı düzeyinde varsayılan yazıcıyı ayarla (Root yetkisi gerektirmez)
+        try:
+            import subprocess
+            subprocess.run(["lpoptions", "-d", self.name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception as e:
+            print("lpoptions hatası:", e)
+
+        # 3. Arayüzü yenile
         self.parent_window.load_devices()
 
     def _action_pause(self):
@@ -387,7 +398,7 @@ class MainWindow(Gtk.Window):
         self.set_titlebar(header)
 
 
-
+        #Refresh Button
         self.btn_refresh = Gtk.Button.new_from_icon_name("view-refresh-symbolic", Gtk.IconSize.BUTTON)
         self.btn_refresh.get_style_context().add_class("top-icon-btn")
         self.btn_refresh.connect("clicked", lambda x: self.load_devices())
@@ -489,12 +500,23 @@ class MainWindow(Gtk.Window):
         printers = self.cups.get_printers()
         scanners = self.scanner.get_scanners()
         
-        # Varsayılan yazıcıyı öğren
         default_printer = None
-        if hasattr(self.cups, 'get_default_printer'):
-            default_printer = self.cups.get_default_printer()
-        elif hasattr(self.cups, 'get_default'):
-            default_printer = self.cups.get_default()
+
+        # 1. Öncelik: Kullanıcının belirlediği varsayılan yazıcıyı 'lpstat -d' ile sorgula
+        try:
+            import subprocess
+            out = subprocess.check_output(["lpstat", "-d"], text=True, stderr=subprocess.DEVNULL)
+            if ":" in out:
+                default_printer = out.split(":")[-1].strip()
+        except Exception:
+            pass
+
+        # 2. Eğer lpstat verisi alınamazsa CUPS backend'den oku
+        if not default_printer:
+            if hasattr(self.cups, 'get_default_printer'):
+                default_printer = self.cups.get_default_printer()
+            elif hasattr(self.cups, 'get_default'):
+                default_printer = self.cups.get_default()
 
         return printers, scanners, default_printer
 
