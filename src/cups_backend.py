@@ -1,5 +1,6 @@
 # pyrefly: ignore [missing-import]
 import cups
+import webbrowser
 from src.logger import logger
 
 class CupsBackend:
@@ -81,6 +82,35 @@ class CupsBackend:
             logger.error(f"Failed to fetch PPD drivers: {e}")
             return {}
 
+    def find_best_ppd(self, model_name):
+        """
+        Scans the system for PPDs based on the 'ppd-make-and-model' field.
+        If a match is found, it returns that PPD; otherwise, it returns the default Generic PostScript PPD.
+        """
+        default_ppd = "drv:///sample.drv/generic.ppd"
+        if not model_name:
+            return default_ppd
+
+        ppds = self.get_ppds()
+        target = model_name.strip().lower()
+
+        # 1. Exact match check
+        for ppd_key, ppd_info in ppds.items():
+            make_model = ppd_info.get("ppd-make-and-model", "").strip().lower()
+            if make_model == target:
+                logger.info(f"Exact PPD match found for '{model_name}': {ppd_key}")
+                return ppd_key
+
+        # 2. Partial (inclusion) match check
+        for ppd_key, ppd_info in ppds.items():
+            make_model = ppd_info.get("ppd-make-and-model", "").strip().lower()
+            if target in make_model or make_model in target:
+                logger.info(f"Partial PPD match found for '{model_name}': {ppd_key}")
+                return ppd_key
+
+        logger.info(f"No matching PPD found for '{model_name}'. Falling back to Generic PostScript.")
+        return default_ppd
+
     def print_test_page(self, printer_name):
         if not self.conn:
             return False
@@ -140,14 +170,21 @@ class CupsBackend:
             logger.error(f"Failed to discover devices: {e}")
             return {}
 
-    def add_printer(self, name, uri, ppd_name="drv:///sample.drv/generic.ppd"):
-        logger.info(f"Attempting to add printer: name='{name}', uri='{uri}', ppd='{ppd_name}'")
+    def add_printer(self, name, uri, model_name=None, ppd_name=None):
+        """
+        Adds a printer directly via the CUPS API.
+        If no PPD is specified, it automatically finds the most suitable PPD based on the model name.
+        """
+        if not ppd_name:
+            ppd_name = self.find_best_ppd(model_name)
+
+        logger.info(f"Attempting to add printer via CUPS API: name='{name}', uri='{uri}', ppd='{ppd_name}'")
         try:
             conn = self.conn if self.conn else cups.Connection()
             conn.addPrinter(name, device=uri, ppdname=ppd_name)
             conn.enablePrinter(name)
             conn.acceptJobs(name)
-            logger.info(f"Printer '{name}' added and enabled successfully.")
+            logger.info(f"Printer '{name}' added and enabled successfully via CUPS API.")
             return True, None
         except cups.IPPError as e:
             err_msg = f"CUPS IPP Error ({e.args[0]}): {e.args[1]}"
@@ -171,3 +208,13 @@ class CupsBackend:
         except Exception as e:
             logger.error(f"Failed to get state for printer '{printer_name}': {e}")
             return "unknown"
+
+    def open_queue(self, printer_name):
+        try:
+            url = f"http://localhost:631/printers/{printer_name}"
+            webbrowser.open(url)
+            logger.info(f"Opened print queue web page for '{printer_name}'.")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to open print queue for '{printer_name}': {e}")
+            return False
