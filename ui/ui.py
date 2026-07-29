@@ -1,6 +1,7 @@
 import gi
 import os
 import threading
+import cups
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GLib
 
@@ -28,19 +29,19 @@ def load_css():
 
 
 class AddDeviceDialog(Gtk.Dialog):
-    """Windows 11 Tarzı Manuel Ekleme + Otomatik Ağ Taraması Diyaloğu"""
+    """Manual Addition + Automatic Network Scanning Dialog"""
     def __init__(self, parent, cups_backend, scanner_backend):
-        super().__init__(title=_("Cihaz Ekle"), transient_for=parent, flags=0)
+        super().__init__(title=_("Add Device"), transient_for=parent, flags=0)
         self.cups_backend = cups_backend
         self.scanner_backend = scanner_backend
 
         self.set_default_size(520, 540)
         
-        # Alt Butonlar
-        self.btn_cancel = self.add_button(_("İptal"), Gtk.ResponseType.CANCEL)
+        # Bottom Buttons
+        self.btn_cancel = self.add_button(_("Cancel"), Gtk.ResponseType.CANCEL)
         self.btn_cancel.get_style_context().add_class("btn-secondary")
         
-        self.btn_add = self.add_button(_("Ekle"), Gtk.ResponseType.OK)
+        self.btn_add = self.add_button(_("Add"), Gtk.ResponseType.OK)
         self.btn_add.get_style_context().add_class("btn-primary")
 
         content_area = self.get_content_area()
@@ -48,8 +49,8 @@ class AddDeviceDialog(Gtk.Dialog):
         vbox_main.set_border_width(18)
         content_area.add(vbox_main)
 
-        # ─── 1. BÖLÜM: Manuel Cihaz Ekleme ───
-        lbl_manual = Gtk.Label(label=_("Manuel Cihaz Ekle"), xalign=0)
+        # ─── SECTION 1: Manual Device Addition ───
+        lbl_manual = Gtk.Label(label=_("Add Device Manually"), xalign=0)
         lbl_manual.get_style_context().add_class("card-title")
         vbox_main.pack_start(lbl_manual, False, False, 0)
 
@@ -57,15 +58,15 @@ class AddDeviceDialog(Gtk.Dialog):
         grid.set_column_spacing(12)
         grid.set_row_spacing(10)
 
-        lbl_name = Gtk.Label(label=_("Cihaz Adı:"), xalign=0)
+        lbl_name = Gtk.Label(label=_("Device Name:"), xalign=0)
         lbl_name.get_style_context().add_class("card-subtitle")
         self.entry_name = Gtk.Entry()
-        self.entry_name.set_placeholder_text(_("Örn: Ofis_Yazicisi"))
+        self.entry_name.set_placeholder_text(_("e.g. Office_Printer"))
 
-        lbl_uri = Gtk.Label(label=_("Bağlantı Adresi (URI):"), xalign=0)
+        lbl_uri = Gtk.Label(label=_("Connection Address (URI):"), xalign=0)
         lbl_uri.get_style_context().add_class("card-subtitle")
         self.entry_uri = Gtk.Entry()
-        self.entry_uri.set_placeholder_text(_("Örn: ipp://192.168.1.50/ipp/print"))
+        self.entry_uri.set_placeholder_text(_("e.g. ipp://192.168.1.50/ipp/print"))
 
         grid.attach(lbl_name, 0, 0, 1, 1)
         grid.attach(self.entry_name, 1, 0, 1, 1)
@@ -76,12 +77,12 @@ class AddDeviceDialog(Gtk.Dialog):
         self.entry_uri.set_hexpand(True)
         vbox_main.pack_start(grid, False, False, 0)
 
-        # Seperatör
+        # Separator
         vbox_main.pack_start(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), False, False, 4)
 
-        # ─── 2. BÖLÜM: Ağda/Sistemde Bulunan Cihazlar ───
+        # ─── SECTION 2: Network & System Discovered Devices ───
         hbox_auto_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        lbl_auto = Gtk.Label(label=_("Ağda ve Sistemde Bulunan Cihazlar"), xalign=0)
+        lbl_auto = Gtk.Label(label=_("Devices Found on Network and System"), xalign=0)
         lbl_auto.get_style_context().add_class("card-title")
         hbox_auto_header.pack_start(lbl_auto, True, True, 0)
 
@@ -104,14 +105,14 @@ class AddDeviceDialog(Gtk.Dialog):
 
     
     def _start_discovery(self):
-        """Ağ taramasını arka planda başlatır ve protokol çöplerini filtreler"""
+        """Starts background network discovery and filters unwanted backend protocols"""
         self.spinner.start()
         
         def scan_worker():
             discovered = []
             IGNORE_KEYWORDS = {"unknown", "lpd", "https", "ipps", "ipp", "http", "socket", "smb", "snmp", "dnssd"}
 
-            # 1. CUPS / Ağ Taraması
+            # 1. CUPS / Network Scan
             try:
                 get_devs = getattr(self.cups_backend, 'get_devices', None) or getattr(self.cups_backend, 'discover_devices', None)
                 if callable(get_devs):
@@ -137,7 +138,7 @@ class AddDeviceDialog(Gtk.Dialog):
             except Exception:
                 pass
 
-            # 2. SANE / Tarayıcı Taraması (Arka planda çalışmaya devam ediyor)
+            # 2. SANE / Scanner Scan (Runs only inside Add Device dialog)
             try:
                 scanners = self.scanner_backend.get_scanners()
                 if isinstance(scanners, dict):
@@ -165,7 +166,7 @@ class AddDeviceDialog(Gtk.Dialog):
 
         if not discovered_devices:
             row = Gtk.ListBoxRow()
-            lbl = Gtk.Label(label=_("Otomatik cihaz bulunamadı. Lütfen yukarıdan manuel ekleyin."), xalign=0)
+            lbl = Gtk.Label(label=_("No automatic devices found. Please add manually above."), xalign=0)
             lbl.get_style_context().add_class("card-subtitle")
             lbl.set_margin_top(10)
             lbl.set_margin_bottom(10)
@@ -175,7 +176,6 @@ class AddDeviceDialog(Gtk.Dialog):
             self.listbox.add(row)
         else:
             for name, uri, dev_type in discovered_devices:
-                # Sadece yazıcıları manuel/otomatik listede göster
                 if dev_type != "printer":
                     continue
 
@@ -209,9 +209,10 @@ class AddDeviceDialog(Gtk.Dialog):
         self.listbox.show_all()
 
     def _on_device_selected(self, listbox, row):
-        """Listeden seçilen cihazın bilgilerini üstteki form alanlarına doldurur"""
+        """Fills form entries when a device is selected from the list"""
         if row and hasattr(row, 'device_uri'):
-            clean_name = row.device_name.replace(" ", "_").replace("-", "_")
+            # Filter out illegal '/' characters for CUPS compatibility
+            clean_name = row.device_name.replace(" ", "_").replace("-", "_").replace("/", "_")
             self.entry_name.set_text(clean_name)
             self.entry_uri.set_text(row.device_uri)
 
@@ -228,27 +229,26 @@ class DeviceCard(Gtk.Box):
         self.parent_window = parent_window
         self.is_default = is_default
 
-        # ─── KENAR BOŞLUKLARI (6px İçeri Alma) ───
         self.set_margin_left(6)
         self.set_margin_right(6)
         self.set_margin_top(4)
         self.set_margin_bottom(4)
 
-        # Üst Başlık Satırı
+        # Header Row
         header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
         
-        # Simge (Mavi)
+        # Icon
         icon_name = "printer-symbolic" if device_type == "printer" else "camera-web-symbolic"
         icon = Gtk.Image.new_from_icon_name(icon_name, Gtk.IconSize.DND)
         icon.get_style_context().add_class("blue-icon")
         header_box.pack_start(icon, False, False, 0)
 
-        # İsim ve Durum Metinleri
+        # Title & Subtitle Labels
         text_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
         title_lbl = Gtk.Label(label=name, xalign=0)
         title_lbl.get_style_context().add_class("card-title")
         
-        type_str = _("Yazıcı") if device_type == "printer" else _("Tarayıcı")
+        type_str = _("Printer") if device_type == "printer" else _("Scanner")
         sub_lbl = Gtk.Label(label=f"{type_str} · {status_text}", xalign=0)
         sub_lbl.get_style_context().add_class("card-subtitle")
 
@@ -256,11 +256,11 @@ class DeviceCard(Gtk.Box):
         text_box.pack_start(sub_lbl, False, False, 0)
         header_box.pack_start(text_box, True, True, 0)
 
-        # Açılır/Kapanır Ok Simgesi
+        # Expand Arrow Icon
         self.arrow_icon = Gtk.Image.new_from_icon_name("pan-down-symbolic", Gtk.IconSize.BUTTON)
         header_box.pack_end(self.arrow_icon, False, False, 0)
 
-        # Genişletilebilir Detay Bölümü (Revealer)
+        # Revealer Action Container
         self.revealer = Gtk.Revealer()
         self.revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_DOWN)
         
@@ -268,34 +268,34 @@ class DeviceCard(Gtk.Box):
         action_box.set_margin_top(8)
 
         if device_type == "printer":
-            # 1. Kuyruğu Aç Butonu
-            btn_queue = Gtk.Button(label=_("Kuyruğu Aç"))
+            # 1. Open Queue
+            btn_queue = Gtk.Button(label=_("Open Queue"))
             btn_queue.get_style_context().add_class("btn-secondary")
-            btn_queue.connect("clicked", lambda x: self._on_action_clicked(_("Kuyruğu Aç"), self._action_open_queue))
+            btn_queue.connect("clicked", lambda x: self._on_action_clicked(_("Open Queue"), self._action_open_queue))
             
-            # 2. Sınama Sayfası Butonu
-            btn_test = Gtk.Button(label=_("Sınama Sayfası"))
+            # 2. Print Test Page
+            btn_test = Gtk.Button(label=_("Test Page"))
             btn_test.get_style_context().add_class("btn-secondary")
-            btn_test.connect("clicked", lambda x: self._on_action_clicked(_("Sınama Sayfası Gönder"), self._action_print_test))
+            btn_test.connect("clicked", lambda x: self._on_action_clicked(_("Send Test Page"), self._action_print_test))
 
-            # 3. Varsayılan Yap Butonu (Varsayılansa butonda 'Varsayılan' yazar ve pasif olur)
-            btn_default_label = _("Varsayılan") if is_default else _("Varsayılan Yap")
+            # 3. Set Default
+            btn_default_label = _("Default") if is_default else _("Set as Default")
             btn_default = Gtk.Button(label=btn_default_label)
             btn_default.get_style_context().add_class("btn-secondary")
             if is_default:
                 btn_default.set_sensitive(False)
             else:
-                btn_default.connect("clicked", lambda x: self._on_action_clicked(_("Varsayılan Yazıcı Yap"), self._action_set_default))
+                btn_default.connect("clicked", lambda x: self._on_action_clicked(_("Set as Default Printer"), self._action_set_default))
 
-            # 4. Duraklat Butonu
-            btn_pause = Gtk.Button(label=_("Duraklat"))
+            # 4. Pause
+            btn_pause = Gtk.Button(label=_("Pause"))
             btn_pause.get_style_context().add_class("btn-secondary")
-            btn_pause.connect("clicked", lambda x: self._on_action_clicked(_("Yazıcıyı Duraklat"), self._action_pause))
+            btn_pause.connect("clicked", lambda x: self._on_action_clicked(_("Pause Printer"), self._action_pause))
 
-            # 5. Kaldır (Sil) Butonu
-            btn_delete = Gtk.Button(label=_("Kaldır"))
+            # 5. Remove
+            btn_delete = Gtk.Button(label=_("Remove"))
             btn_delete.get_style_context().add_class("btn-danger")
-            btn_delete.connect("clicked", lambda x: self._on_action_clicked(_("Yazıcıyı Kaldır"), self._action_delete))
+            btn_delete.connect("clicked", lambda x: self._on_action_clicked(_("Remove Printer"), self._action_delete))
 
             action_box.pack_start(btn_queue, False, False, 0)
             action_box.pack_start(btn_test, False, False, 0)
@@ -305,7 +305,7 @@ class DeviceCard(Gtk.Box):
 
         self.revealer.add(action_box)
 
-        # Tıklanabilir Alan
+        # Event Box
         header_event_box = Gtk.EventBox()
         header_event_box.add(header_box)
         header_event_box.connect("button-press-event", self.toggle_reveal)
@@ -319,9 +319,8 @@ class DeviceCard(Gtk.Box):
         icon_name = "pan-up-symbolic" if not is_revealed else "pan-down-symbolic"
         self.arrow_icon.set_from_icon_name(icon_name, Gtk.IconSize.BUTTON)
 
-    # ─── ONAY DİYALOĞU MEKANİZMASI ───
     def _confirm_dialog(self, title, message):
-        """Kullanıcıya 'Devam etmek istiyor musunuz?' sorusu soran pencere"""
+        """Action confirmation dialog"""
         dialog = Gtk.MessageDialog(
             transient_for=self.parent_window,
             flags=0,
@@ -337,14 +336,12 @@ class DeviceCard(Gtk.Box):
         return response == Gtk.ResponseType.OK
 
     def _on_action_clicked(self, action_name, callback):
-        """Tüm butonların geçeceği ortak onay kontrolü"""
-        msg = _("'{0}' cihazı için '{1}' işlemini gerçekleştirmek istiyor musunuz?").format(self.name, action_name)
+        msg = _("Do you want to perform '{1}' action for device '{0}'?").format(self.name, action_name)
         if self._confirm_dialog(action_name, msg):
             callback()
 
-    # ─── BUTON İŞLEVLERİ ───
+    # ─── ACTION CALLBACKS (USING PYCUPS) ───
     def _action_open_queue(self):
-        print(f"{self.name} için kuyruk açılıyor...")
         self.parent_window.cups.open_queue(self.name)
 
     def _action_print_test(self):
@@ -352,23 +349,16 @@ class DeviceCard(Gtk.Box):
             self.parent_window.cups.print_test_page(self.name)
 
     def _action_set_default(self):
-        print(f"{self.name} varsayılan yapılıyor...")
-        # 1. Backend çağrısı
-        if hasattr(self.parent_window.cups, 'set_default_printer'):
-            self.parent_window.cups.set_default_printer(self.name)
-        
-        # 2. Linux kullanıcı düzeyinde varsayılan yazıcıyı ayarla (Root yetkisi gerektirmez)
         try:
-            import subprocess
-            subprocess.run(["lpoptions", "-d", self.name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            conn = cups.Connection()
+            conn.setDefault(self.name)
         except Exception as e:
-            print("lpoptions hatası:", e)
-
-        # 3. Arayüzü yenile
+            if hasattr(self.parent_window.cups, 'set_default_printer'):
+                self.parent_window.cups.set_default_printer(self.name)
+                
         self.parent_window.load_devices()
 
     def _action_pause(self):
-        print(f"{self.name} duraklatılıyor...")
         self.parent_window.cups.pause_printer(self.name)
 
     def _action_delete(self):
@@ -376,14 +366,10 @@ class DeviceCard(Gtk.Box):
             if self.parent_window.cups.delete_printer(self.name):
                 self.parent_window.load_devices()    
 
-    def _on_delete_printer(self):
-        if self.parent_window.cups.delete_printer(self.name):
-            self.parent_window.load_devices()
-
 
 class MainWindow(Gtk.Window):
     def __init__(self, cups_backend=None, scanner_backend=None):
-        super().__init__(title=_("Yazıcılar ve Tarayıcılar"))
+        super().__init__(title=_("Printers and Scanners"))
         self.set_default_size(750, 600)
         load_css()
 
@@ -391,22 +377,20 @@ class MainWindow(Gtk.Window):
         self.scanner = scanner_backend if scanner_backend else ScannerBackend()
         self.notifier = NotificationManager()
 
-        # Üst Başlık Çubuğu
+        # Header Bar
         header = Gtk.HeaderBar()
         header.set_show_close_button(True)
-        header.set_title(_("Yazıcılar ve Tarayıcılar"))
+        header.set_title(_("Printers and Scanners"))
         self.set_titlebar(header)
 
-
-        #Refresh Button
+        # Refresh Button Only
         self.btn_refresh = Gtk.Button.new_from_icon_name("view-refresh-symbolic", Gtk.IconSize.BUTTON)
         self.btn_refresh.get_style_context().add_class("top-icon-btn")
         self.btn_refresh.connect("clicked", lambda x: self.load_devices())
 
         header.pack_end(self.btn_refresh)
 
-
-        # Ana Kapsayıcı
+        # Main Scroll Container
         scroll = Gtk.ScrolledWindow()
         self.add(scroll)
 
@@ -418,50 +402,48 @@ class MainWindow(Gtk.Window):
 
         scroll.add(main_box)
 
-        # 1. Ana Başlık
-        lbl_main = Gtk.Label(label=_("Yazıcılar ve Tarayıcılar"), xalign=0)
+        # 1. Main Title
+        lbl_main = Gtk.Label(label=_("Printers and Scanners"), xalign=0)
         lbl_main.get_style_context().add_class("main-title")
         lbl_main.set_margin_left(12)
         main_box.pack_start(lbl_main, False, False, 0)
 
-        # 2. Cihaz Ekle Kartı
+        # 2. Add Device Card
         add_card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16)
         add_card.get_style_context().add_class("add-device-card")
         add_card.set_margin_left(6)
         add_card.set_margin_right(6)
 
         add_text_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
-        add_title = Gtk.Label(label=_("Cihaz ekle"), xalign=0)
+        add_title = Gtk.Label(label=_("Add Device"), xalign=0)
         add_title.get_style_context().add_class("card-title")
-        add_sub = Gtk.Label(label=_("Ağdaki veya USB'deki bir yazıcı ya da tarayıcı ekleyin"), xalign=0)
+        add_sub = Gtk.Label(label=_("Add a printer or scanner on network or USB"), xalign=0)
         add_sub.get_style_context().add_class("card-subtitle")
 
         add_text_box.pack_start(add_title, False, False, 0)
         add_text_box.pack_start(add_sub, False, False, 0)
         add_card.pack_start(add_text_box, True, True, 0)
 
-        # Mavi "Cihaz ekle" Butonu
-        btn_add_device = Gtk.Button(label=_("Cihaz ekle"))
+        btn_add_device = Gtk.Button(label=_("Add Device"))
         btn_add_device.get_style_context().add_class("btn-primary")
         btn_add_device.connect("clicked", self._on_add_device_clicked)
         add_card.pack_end(btn_add_device, False, False, 0)
 
         main_box.pack_start(add_card, False, False, 0)
 
-        # 3. Cihazlarınız Alt Başlığı
-        lbl_section = Gtk.Label(label=_("Cihazlarınız"), xalign=0)
+        # 3. Section Subtitle
+        lbl_section = Gtk.Label(label=_("Your Devices"), xalign=0)
         lbl_section.get_style_context().add_class("section-title")
         lbl_section.set_margin_left(12)
         main_box.pack_start(lbl_section, False, False, 0)
 
-        # 4. Cihaz Listesi Konteynırı
+        # 4. Device List Container
         self.device_list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
         main_box.pack_start(self.device_list_box, True, True, 0)
 
         self.load_devices()
 
     def _on_add_device_clicked(self, button):
-        """Cihaz Ekle butonuna tıklandığında açılan diyalog penceresi"""
         button.set_sensitive(False)
         while Gtk.events_pending():
             Gtk.main_iteration()
@@ -477,7 +459,7 @@ class MainWindow(Gtk.Window):
             if name and uri:
                 if getattr(self.cups, 'add_printer', None):
                     if self.cups.add_printer(name, uri):
-                        self.notifier.notify(_("Başarılı"), _("Cihaz başarıyla eklendi."))
+                        self.notifier.notify(_("Success"), _("Device added successfully."))
                         self.load_devices()
 
         dialog.destroy()
@@ -497,57 +479,34 @@ class MainWindow(Gtk.Window):
         )
 
     def _fetch_devices(self):
+        """Fast load: Fetches CUPS printers & default printer via pycups without network scanning"""
         printers = self.cups.get_printers()
-        scanners = self.scanner.get_scanners()
-        
         default_printer = None
 
-        # 1. Öncelik: Kullanıcının belirlediği varsayılan yazıcıyı 'lpstat -d' ile sorgula
         try:
-            import subprocess
-            out = subprocess.check_output(["lpstat", "-d"], text=True, stderr=subprocess.DEVNULL)
-            if ":" in out:
-                default_printer = out.split(":")[-1].strip()
+            conn = cups.Connection()
+            default_printer = conn.getDefault()
         except Exception:
-            pass
-
-        # 2. Eğer lpstat verisi alınamazsa CUPS backend'den oku
-        if not default_printer:
             if hasattr(self.cups, 'get_default_printer'):
                 default_printer = self.cups.get_default_printer()
-            elif hasattr(self.cups, 'get_default'):
-                default_printer = self.cups.get_default()
 
-        return printers, scanners, default_printer
+        return printers, {}, default_printer
 
     def _on_devices_loaded(self, result, error):
         if hasattr(self, 'btn_refresh'):
             self.btn_refresh.set_sensitive(True)
 
         if error:
-            print("Cihazlar yüklenirken hata:", error)
+            print("Error loading devices:", error)
             return
 
         printers, scanners, default_printer = result
 
-        # Yazıcıları ekle
         if isinstance(printers, dict):
             for name in printers.keys():
                 is_default = (name == default_printer)
-                status_text = _("Varsayılan Yazıcı") if is_default else _("Boşta")
+                status_text = _("Default Printer") if is_default else _("Idle")
                 card = DeviceCard(name, "printer", status_text, self, is_default=is_default)
                 self.device_list_box.pack_start(card, False, False, 0)
-
-        # ─── TARAYICILAR KODLARI KORUNDU (Geçici Olarak Arayüzde Gizlendi) ───
-        # if isinstance(scanners, dict):
-        #     for dev_id, info in scanners.items():
-        #         name = info.get('description', dev_id) if isinstance(info, dict) else str(dev_id)
-        #         card = DeviceCard(name, "scanner", _("Hazır (Tarayıcı)"), self)
-        #         self.device_list_box.pack_start(card, False, False, 0)
-        # elif isinstance(scanners, list):
-        #     for sc in scanners:
-        #         name = sc.get('description', sc.get('name', 'Bilinmeyen Tarayıcı')) if isinstance(sc, dict) else str(sc)
-        #         card = DeviceCard(name, "scanner", _("Hazır (Tarayıcı)"), self)
-        #         self.device_list_box.pack_start(card, False, False, 0)
 
         self.device_list_box.show_all()
