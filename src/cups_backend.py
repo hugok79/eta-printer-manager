@@ -1,6 +1,8 @@
+# pyrefly: ignore [missing-import]
 import cups
 import os
 import subprocess
+from src.logger import logger
 
 class CupsBackend:
     def __init__(self):
@@ -122,16 +124,34 @@ class CupsBackend:
             print(f"Cihazlar keşfedilemedi: {e}")
             return {}
 
-    def add_printer(self, name, uri, ppd_name="everywhere"):
-        if not self.conn:
-            return False
+    def add_printer(self, name, uri, ppd_name="drv:///sample.drv/generic.ppd"):
+        logger.info(f"Attempting to add printer: name='{name}', uri='{uri}', ppd='{ppd_name}'")
         try:
-            cmd = ['pkexec', '/usr/sbin/lpadmin', '-p', name, '-E', '-v', uri, '-m', ppd_name]
-            result = subprocess.run(cmd, capture_output=True, text=True)
-            return result.returncode == 0
+            conn = cups.Connection()
+            conn.addPrinter(name, device=uri, ppdname=ppd_name)
+            conn.enablePrinter(name)
+            conn.acceptJobs(name)
+            logger.info(f"Printer '{name}' added and enabled successfully.")
+            return True, None
+        except cups.IPPError as e:
+            err_msg = f"CUPS IPP Error ({e.args[0]}): {e.args[1]}"
+            logger.error(f"Failed to add printer '{name}': {err_msg}")
+            return False, err_msg
         except Exception as e:
-            print(f"Yazıcı eklenirken hata: {e}")
-            return False
+            err_msg = str(e)
+            logger.exception(f"Unexpected error while adding printer '{name}': {err_msg}")
+            return False, err_msg
+
+    def get_printers(self):
+        logger.debug("Fetching printer list from CUPS...")
+        try:
+            conn = cups.Connection()
+            printers = conn.getPrinters()
+            logger.debug(f"Found {len(printers)} printers.")
+            return printers
+        except Exception as e:
+            logger.exception("Failed to fetch printer list from CUPS.")
+            return {}
 
     def get_printer_state(self, printer_name):
         if not self.conn:

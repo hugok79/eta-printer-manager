@@ -8,7 +8,7 @@ import cups
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GLib
-
+from src.logger import logger
 from src.async_loader import AsyncLoader
 from src.cups_backend import CupsBackend
 from src.scanner_backend import ScannerBackend
@@ -466,6 +466,19 @@ class MainWindow(Gtk.Window):
 
         GLib.idle_add(self.load_devices)
 
+    def show_error_dialog(self, title, message):
+        """Kullanıcıya detaylı hata bildirim penceresi gösterir"""
+        dialog = Gtk.MessageDialog(
+            transient_for=self,
+            flags=0,
+            message_type=Gtk.MessageType.ERROR,
+            buttons=Gtk.ButtonsType.OK,
+            text=title
+        )
+        dialog.format_secondary_text(message)
+        dialog.run()
+        dialog.destroy()
+
     def _on_add_device_clicked(self, button):
         button.set_sensitive(False)
         dialog = AddDeviceDialog(self, self.cups, self.scanner)
@@ -475,10 +488,10 @@ class MainWindow(Gtk.Window):
                 name, uri, ppd = dlg.get_result()
                 if name and uri:
                     def add_task():
-                        success = False
+                        result = (False, _("Backend error"))
                         if getattr(self.cups, 'add_printer', None):
-                            success = self.cups.add_printer(name, uri, ppd_name=ppd)
-                        GLib.idle_add(self._on_printer_added, success)
+                            result = self.cups.add_printer(name, uri, ppd_name=ppd)
+                        GLib.idle_add(self._on_printer_added, result)
 
                     threading.Thread(target=add_task, daemon=True).start()
 
@@ -488,12 +501,22 @@ class MainWindow(Gtk.Window):
         dialog.connect("response", on_response)
         dialog.show_all()
 
-    def _on_printer_added(self, success):
+    def _on_printer_added(self, result):
+        if isinstance(result, tuple):
+            success, error_msg = result
+        else:
+            success, error_msg = result, None
+
         if success:
+            logger.info("Printer added successfully, refreshing device list.")
             self.notifier.notify(_("Success"), _("Device added successfully."))
             self.load_devices()
         else:
-            self.notifier.notify(_("Error"), _("Failed to add device."))
+            logger.error(f"Printer addition failed: {error_msg}")
+            self.show_error_dialog(
+                _("Failed to Add Device"),
+                _("An error occurred while adding the printer:\n\n{0}").format(error_msg or _("Unknown error"))
+            )
         return GLib.SOURCE_REMOVE
 
     def load_devices(self):
