@@ -1,24 +1,26 @@
 # pyrefly: ignore [missing-import]
 import cups
-import os
-import subprocess
 from src.logger import logger
 
 class CupsBackend:
     def __init__(self):
         try:
             self.conn = cups.Connection()
+            logger.info("CUPS connection established successfully.")
         except Exception as e:
-            print(f"CUPS bağlantı hatası: {e}")
+            logger.error(f"CUPS connection error: {e}")
             self.conn = None
 
     def get_printers(self):
         if not self.conn:
             return {}
+        logger.debug("Fetching printer list from CUPS...")
         try:
-            return self.conn.getPrinters()
+            printers = self.conn.getPrinters()
+            logger.debug(f"Found {len(printers)} printers.")
+            return printers
         except Exception as e:
-            print(f"Yazıcılar alınamadı: {e}")
+            logger.exception("Failed to fetch printer list from CUPS.")
             return {}
 
     def get_printer_jobs(self, printer_name):
@@ -31,7 +33,7 @@ class CupsBackend:
             )
             return {k: v for k, v in jobs.items() if printer_name in v.get('printer-uri', '')}
         except Exception as e:
-            print(f"İşler alınamadı: {e}")
+            logger.error(f"Failed to fetch print jobs: {e}")
             return {}
 
     def cancel_job(self, job_id):
@@ -39,9 +41,10 @@ class CupsBackend:
             return False
         try:
             self.conn.cancelJob(job_id)
+            logger.info(f"Job {job_id} cancelled successfully.")
             return True
         except Exception as e:
-            print(f"İş iptal edilemedi: {e}")
+            logger.error(f"Failed to cancel job {job_id}: {e}")
             return False
 
     def pause_printer(self, printer_name):
@@ -49,9 +52,10 @@ class CupsBackend:
             return False
         try:
             self.conn.disablePrinter(printer_name)
+            logger.info(f"Printer '{printer_name}' paused.")
             return True
         except Exception as e:
-            print(f"Yazıcı duraklatılamadı: {e}")
+            logger.error(f"Failed to pause printer '{printer_name}': {e}")
             return False
 
     def resume_printer(self, printer_name):
@@ -59,18 +63,22 @@ class CupsBackend:
             return False
         try:
             self.conn.enablePrinter(printer_name)
+            logger.info(f"Printer '{printer_name}' resumed.")
             return True
         except Exception as e:
-            print(f"Yazıcı devam ettirilemedi: {e}")
+            logger.error(f"Failed to resume printer '{printer_name}': {e}")
             return False
 
     def get_ppds(self):
         if not self.conn:
             return {}
+        logger.debug("Fetching PPD list from CUPS...")
         try:
-            return self.conn.getPPDs()
+            ppds = self.conn.getPPDs()
+            logger.debug(f"Found {len(ppds)} PPD drivers.")
+            return ppds
         except Exception as e:
-            print(f"PPD'ler alınamadı: {e}")
+            logger.error(f"Failed to fetch PPD drivers: {e}")
             return {}
 
     def print_test_page(self, printer_name):
@@ -79,11 +87,12 @@ class CupsBackend:
         test_file_path = "/tmp/pardus_test_page.txt"
         try:
             with open(test_file_path, "w") as f:
-                f.write("Pardus Yazıcı Test Sayfası\n\nBu sayfa başarıyla yazdırıldıysa, yazıcınız düzgün çalışıyor demektir.\n")
+                f.write("Pardus Printer Test Page\n\nIf this page prints successfully, your printer is working correctly.\n")
             job_id = self.conn.printFile(printer_name, test_file_path, "Test Page", {})
+            logger.info(f"Test page job {job_id} sent to '{printer_name}'.")
             return job_id > 0
         except Exception as e:
-            print(f"Test sayfası yazdırılamadı: {e}")
+            logger.error(f"Failed to print test page on '{printer_name}': {e}")
             return False
 
     def delete_printer(self, printer_name):
@@ -91,43 +100,50 @@ class CupsBackend:
             return False
         try:
             self.conn.deletePrinter(printer_name)
+            logger.info(f"Printer '{printer_name}' deleted successfully.")
             return True
         except Exception as e:
-            print(f"Yazıcı silinemedi: {e}")
+            logger.error(f"Failed to delete printer '{printer_name}': {e}")
             return False
 
     def get_default_printer(self):
         if not self.conn:
             return None
         try:
-            return self.conn.getDefault()
+            default_printer = self.conn.getDefault()
+            logger.debug(f"Default printer: {default_printer}")
+            return default_printer
         except Exception as e:
-            print(f"Varsayılan yazıcı alınamadı: {e}")
+            logger.error(f"Failed to get default printer: {e}")
             return None
 
     def set_default_printer(self, printer_name):
         if not self.conn:
             return False
         try:
-            subprocess.run(['lpoptions', '-d', printer_name], check=True)
+            self.conn.setDefault(printer_name)
+            logger.info(f"Default printer set to '{printer_name}'.")
             return True
         except Exception as e:
-            print(f"Varsayılan yazıcı yapılamadı: {e}")
+            logger.error(f"Failed to set default printer '{printer_name}': {e}")
             return False
 
     def discover_devices(self):
         if not self.conn:
             return {}
+        logger.debug("Discovering CUPS devices...")
         try:
-            return self.conn.getDevices()
+            devices = self.conn.getDevices()
+            logger.debug(f"Discovered {len(devices)} devices.")
+            return devices
         except Exception as e:
-            print(f"Cihazlar keşfedilemedi: {e}")
+            logger.error(f"Failed to discover devices: {e}")
             return {}
 
     def add_printer(self, name, uri, ppd_name="drv:///sample.drv/generic.ppd"):
         logger.info(f"Attempting to add printer: name='{name}', uri='{uri}', ppd='{ppd_name}'")
         try:
-            conn = cups.Connection()
+            conn = self.conn if self.conn else cups.Connection()
             conn.addPrinter(name, device=uri, ppdname=ppd_name)
             conn.enablePrinter(name)
             conn.acceptJobs(name)
@@ -142,17 +158,6 @@ class CupsBackend:
             logger.exception(f"Unexpected error while adding printer '{name}': {err_msg}")
             return False, err_msg
 
-    def get_printers(self):
-        logger.debug("Fetching printer list from CUPS...")
-        try:
-            conn = cups.Connection()
-            printers = conn.getPrinters()
-            logger.debug(f"Found {len(printers)} printers.")
-            return printers
-        except Exception as e:
-            logger.exception("Failed to fetch printer list from CUPS.")
-            return {}
-
     def get_printer_state(self, printer_name):
         if not self.conn:
             return "unknown"
@@ -164,4 +169,5 @@ class CupsBackend:
                 return state_map.get(state, 'unknown')
             return "unknown"
         except Exception as e:
+            logger.error(f"Failed to get state for printer '{printer_name}': {e}")
             return "unknown"
