@@ -1,16 +1,17 @@
-/* Ana Pencere ve Arka Plan */
+/* Main Window and Background */
 window {
-    background-color: #f9f9fb;
+    background-color: @theme_bg_color;
+    color: @theme_fg_color;
     font-family: "Segoe UI", "Cantarell", "Ubuntu", sans-serif;
 }
 
 headerbar {
-    background-color: #f9f9fb;
+    background-color: @theme_bg_color;
     border-bottom: none;
     box-shadow: none;
 }
 
-/* Üst Sağ Simge Butonları */
+/* Top-Right Icon Buttons */
 .top-icon-btn {
     background: transparent;
     border: none;
@@ -20,51 +21,52 @@ headerbar {
 }
 
 .top-icon-btn:hover {
-    background-color: #e3e5e8;
+    background-color: @theme_selected_bg_color;
+    color: @theme_selected_fg_color;
 }
 
-/* Ana Sayfa Başlıkları */
+/* Main Page Titles */
 .main-title {
     font-size: 24px;
     font-weight: 700;
-    color: #1a1a1a;
+    color: @theme_fg_color;
     margin-bottom: 18px;
 }
 
 .section-title {
     font-size: 15px;
     font-weight: 700;
-    color: #1a1a1a;
+    color: @theme_fg_color;
     margin-top: 12px;
     margin-bottom: 12px;
 }
 
-/* Windows 11 Kart Yapıları */
+/* Card Containers */
 .add-device-card,
 .device-card {
-    background-color: #ffffff;
-    border: 1px solid #e2e8f0;
+    background-color: @theme_base_color;
+    border: 1px solid @theme_borders;
     border-radius: 8px;
     padding: 16px;
     margin-bottom: 10px;
 }
 
-/* Yazı Stilleri */
+/* Text Styles */
 .card-title {
     font-size: 14px;
     font-weight: 600;
-    color: #1f1f1f;
+    color: @theme_text_color;
 }
 
 .card-subtitle {
     font-size: 12px;
-    color: #616161;
+    color: @theme_unfocused_fg_color;
 }
 
-/* Windows 11 Mavi Birincil Buton (Cihaz Ekle) */
+/* Primary Action Button (Add Device) */
 .btn-primary {
-    background-color: #0067c0;
-    color: #ffffff;
+    background-color: @theme_selected_bg_color;
+    color: @theme_selected_fg_color;
     font-weight: 600;
     border-radius: 6px;
     padding: 8px 18px;
@@ -72,14 +74,15 @@ headerbar {
 }
 
 .btn-primary:hover {
-    background-color: #005a9e;
+    background-color: @theme_selected_bg_color;
+    opacity: 0.9;
 }
 
-/* İkincil Aksiyon Butonları (Kuyruğu Aç, Sınama vb.) */
+/* Secondary Action Buttons (Open Queue, Test Page, etc.) */
 .btn-secondary {
-    background-color: #fcfcfc;
-    color: #1a1a1a;
-    border: 1px solid #d1d1d1;
+    background-color: @theme_bg_color;
+    color: @theme_fg_color;
+    border: 1px solid @theme_borders;
     border-radius: 6px;
     padding: 6px 14px;
     font-size: 13px;
@@ -87,10 +90,10 @@ headerbar {
 }
 
 .btn-secondary:hover {
-    background-color: #f0f0f0;
+    background-color: @theme_base_color;
 }
 
-/* Kırmızı Sil Butonu (Kaldır) */
+/* Danger Button (Remove Device) */
 .btn-danger {
     background-color: #c42b1c;
     color: #ffffff;
@@ -105,7 +108,7 @@ headerbar {
     background-color: #a82317;
 }
 
-/* Mavi Cihaz Simgesi */
+/* Accent Device Icon */
 .blue-icon {
-    color: #0067c0;
+    color: @theme_selected_bg_color;
 }
