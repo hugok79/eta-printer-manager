@@ -1,17 +1,26 @@
-/* Main Window and Background */
-window {
+/* GTK Koyu ve Açık Tema Tam Uyumlu Stil Dosyası */
+
+window,
+dialog {
     background-color: @theme_bg_color;
     color: @theme_fg_color;
     font-family: "Segoe UI", "Cantarell", "Ubuntu", sans-serif;
 }
 
+/* Dialog ve İç Kapların Arka Planı */
+dialog box,
+dialog grid,
+dialog scrolledwindow {
+    background-color: transparent;
+}
+
 headerbar {
     background-color: @theme_bg_color;
-    border-bottom: none;
+    border-bottom: 1px solid @borders;
     box-shadow: none;
 }
 
-/* Top-Right Icon Buttons */
+/* Üst Sağ İkon Butonları */
 .top-icon-btn {
     background: transparent;
     border: none;
@@ -21,11 +30,14 @@ headerbar {
 }
 
 .top-icon-btn:hover {
-    background-color: @theme_selected_bg_color;
-    color: @theme_selected_fg_color;
+    background-color: alpha(@theme_fg_color, 0.1);
 }
 
-/* Main Page Titles */
+/* Genel Etiket ve Başlıklar */
+label {
+    color: @theme_fg_color;
+}
+
 .main-title {
     font-size: 24px;
     font-weight: 700;
@@ -41,17 +53,18 @@ headerbar {
     margin-bottom: 12px;
 }
 
-/* Card Containers */
+/* Kart Kutu Yapıları (Ana Ekran ve Cihaz Kartları) */
 .add-device-card,
 .device-card {
     background-color: @theme_base_color;
-    border: 1px solid @theme_borders;
+    color: @theme_text_color;
+    border: 1px solid @borders;
     border-radius: 8px;
     padding: 16px;
     margin-bottom: 10px;
 }
 
-/* Text Styles */
+/* Kart İçi Metin Stilleri */
 .card-title {
     font-size: 14px;
     font-weight: 600;
@@ -60,10 +73,42 @@ headerbar {
 
 .card-subtitle {
     font-size: 12px;
-    color: @theme_unfocused_fg_color;
+    color: alpha(@theme_text_color, 0.7);
 }
 
-/* Primary Action Button (Add Device) */
+/* Giriş Kutuları (Entry) ve Açılır Menüler (ComboBox) */
+entry,
+combobox button {
+    background-color: @theme_base_color;
+    color: @theme_text_color;
+    border: 1px solid @borders;
+    border-radius: 6px;
+    padding: 6px;
+}
+
+/* Bulunan Cihazlar Listesi (ListBox) */
+listbox {
+    background-color: @theme_base_color;
+    border: 1px solid @borders;
+    border-radius: 6px;
+}
+
+listbox row {
+    background-color: @theme_base_color;
+    color: @theme_text_color;
+    border-bottom: 1px solid alpha(@borders, 0.5);
+}
+
+listbox row:hover {
+    background-color: alpha(@theme_selected_bg_color, 0.2);
+}
+
+listbox row:selected {
+    background-color: @theme_selected_bg_color;
+    color: @theme_selected_fg_color;
+}
+
+/* Ana Eylem Butonu (Mavi - Cihaz Ekle) */
 .btn-primary {
     background-color: @theme_selected_bg_color;
     color: @theme_selected_fg_color;
@@ -74,15 +119,14 @@ headerbar {
 }
 
 .btn-primary:hover {
-    background-color: @theme_selected_bg_color;
-    opacity: 0.9;
+    background-color: alpha(@theme_selected_bg_color, 0.85);
 }
 
-/* Secondary Action Buttons (Open Queue, Test Page, etc.) */
+/* İkincil Butonlar (İptal, Browse PPD, Kuyruğu Aç vs.) */
 .btn-secondary {
-    background-color: @theme_bg_color;
+    background-color: alpha(@theme_fg_color, 0.1);
     color: @theme_fg_color;
-    border: 1px solid @theme_borders;
+    border: 1px solid @borders;
     border-radius: 6px;
     padding: 6px 14px;
     font-size: 13px;
@@ -90,10 +134,10 @@ headerbar {
 }
 
 .btn-secondary:hover {
-    background-color: @theme_base_color;
+    background-color: alpha(@theme_fg_color, 0.2);
 }
 
-/* Danger Button (Remove Device) */
+/* Silme/Kaldırma Butonu */
 .btn-danger {
     background-color: #c42b1c;
     color: #ffffff;
@@ -108,7 +152,7 @@ headerbar {
     background-color: #a82317;
 }
 
-/* Accent Device Icon */
+/* Mavi Simge */
 .blue-icon {
     color: @theme_selected_bg_color;
 }

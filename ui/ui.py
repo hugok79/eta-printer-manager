@@ -17,19 +17,24 @@ from src.locale_config import _
 
 
 def load_css():
-    css_provider = Gtk.CssProvider()
-    css_path = "/usr/share/pardus/eta-printer-manager/data/style.css"
+    # Öncelik 1: Projenin kendi klasöründeki yerel style.css
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    css_path = os.path.join(base_dir, "data", "style.css")
+    
     if not os.path.exists(css_path):
-        css_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "style.css")
-        if not os.path.exists(css_path):
-            css_path = os.path.abspath(os.path.join("data", "style.css"))
+        css_path = os.path.abspath(os.path.join("data", "style.css"))
+    
+    # Öncelik 2: Eğer projede yoksa sistemdeki kurulu dosya (Fallback)
+    if not os.path.exists(css_path):
+        css_path = "/usr/share/pardus/eta-printer-manager/data/style.css"
 
     if os.path.exists(css_path):
+        css_provider = Gtk.CssProvider()
         css_provider.load_from_path(css_path)
         Gtk.StyleContext.add_provider_for_screen(
             Gdk.Screen.get_default(),
             css_provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+            Gtk.STYLE_PROVIDER_PRIORITY_USER
         )
 
 
@@ -257,6 +262,9 @@ class AddDeviceDialog(Gtk.Dialog):
 class DeviceCard(Gtk.Box):
     def __init__(self, name, device_type, status_text, parent_window, is_default=False):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+
+        
+
         self.get_style_context().add_class("device-card")
         self.name = name
         self.device_type = device_type
