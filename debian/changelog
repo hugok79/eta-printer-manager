@@ -1,3 +1,11 @@
+eta-printer-manager (1.0.1) unstable; urgency=medium
+
+  * Added logging system and detailed CUPS error handling.
+  * Added 5-second cooldown to refresh button.
+  * Updated GTK CSS theme support for Adwaita and dark modes.
+
+ -- Pardus Developers <dev@pardus.org.tr>  Wed, 29 Jul 2026 14:15:00 +0300
+
 eta-printer-manager (0.0.1) unstable; urgency=medium
 
   * Initial Commit
