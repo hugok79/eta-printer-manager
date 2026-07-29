@@ -547,14 +547,23 @@ class MainWindow(Gtk.Window):
         return printers, {}, default_printer
 
     def _on_devices_loaded(self, result, error):
+        # Butonu hemen açmak yerine 5 saniyelik bekleme süresi (cooldown) koyuyoruz
         if hasattr(self, 'btn_refresh'):
-            self.btn_refresh.set_sensitive(True)
+            def reenable_refresh():
+                if hasattr(self, 'btn_refresh') and self.btn_refresh:
+                    self.btn_refresh.set_sensitive(True)
+                    logger.debug("Refresh button re-enabled after 5 seconds cooldown.")
+                return False  # GLib zamanlayıcısını tek seferden sonra kapatır
+
+            # 5 saniye sonra reenable_refresh fonksiyonunu çalıştır
+            GLib.timeout_add_seconds(5, reenable_refresh)
 
         if error:
-            print("Error loading devices:", error)
+            logger.error(f"Error loading devices: {error}")
             return
 
         printers, scanners, default_printer = result
+        # ... (metodun geri kalan kodları olduğu gibi kalsın) ...
 
         if isinstance(printers, dict):
             for name in printers.keys():

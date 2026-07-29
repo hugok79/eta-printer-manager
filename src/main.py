@@ -6,12 +6,18 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from gi.repository import GLib, Gtk
+
+# Görev yöneticisinde ve sistem süreçlerinde uygulamanın adını belirler:
+GLib.set_prgname("eta-printer-manager")
+GLib.set_application_name("Printers and Scanners")
 
 # Modül importları
 from src.cups_backend import CupsBackend
 from src.scanner_backend import ScannerBackend
 from ui.ui import MainWindow
+
+
 
 def main():
     # Motorları ilklendir
