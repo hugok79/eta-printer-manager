@@ -1,4 +1,5 @@
 # pyrefly: ignore [missing-import]
+import os
 import cups
 import webbrowser
 from src.logger import logger
@@ -13,11 +14,11 @@ class CupsBackend:
             self.conn = None
 
     def get_printers(self):
-        if not self.conn:
-            return {}
         logger.debug("Fetching printer list from CUPS...")
         try:
-            printers = self.conn.getPrinters()
+            # Thread-safe: Arka plan thread'leri için bağımsız bağlantı oluştur
+            conn = cups.Connection()
+            printers = conn.getPrinters()
             logger.debug(f"Found {len(printers)} printers.")
             return printers
         except Exception as e:
@@ -71,11 +72,11 @@ class CupsBackend:
             return False
 
     def get_ppds(self):
-        if not self.conn:
-            return {}
         logger.debug("Fetching PPD list from CUPS...")
         try:
-            ppds = self.conn.getPPDs()
+            # Thread-safe: Arka plan thread'leri için bağımsız bağlantı oluştur
+            conn = cups.Connection()
+            ppds = conn.getPPDs()
             logger.debug(f"Found {len(ppds)} PPD drivers.")
             return ppds
         except Exception as e:
@@ -114,10 +115,17 @@ class CupsBackend:
     def print_test_page(self, printer_name):
         if not self.conn:
             return False
-        test_file_path = "/tmp/pardus_test_page.txt"
-        try:
+        
+        # 1. Standart renkli/logolu CUPS test sayfasının yolu
+        test_file_path = "/usr/share/cups/data/testprint"
+        
+        # 2. Eğer sistemde bu dosya yoksa eski sade metin dosyasına düş
+        if not os.path.exists(test_file_path):
+            test_file_path = "/tmp/pardus_test_page.txt"
             with open(test_file_path, "w") as f:
                 f.write("Pardus Printer Test Page\n\nIf this page prints successfully, your printer is working correctly.\n")
+
+        try:
             job_id = self.conn.printFile(printer_name, test_file_path, "Test Page", {})
             logger.info(f"Test page job {job_id} sent to '{printer_name}'.")
             return job_id > 0
@@ -224,7 +232,8 @@ class CupsBackend:
         Henüz eklenmemiş bir ağ/IPP yazıcısının URI adresinden
         marka, model ve isim özelliklerini çekerek otomatik doldurma verisi sağlar.
         """
-        if not uri:
+        # Sadece IPP / HTTP protokollü ağ adreslerine sorgu at (cups-pdf:/, cups-brf:/, dnssd:// elenir)
+        if not uri or not uri.startswith(("ipp://", "ipps://", "http://", "https://")):
             return {}
         
         logger.debug(f"Fetching IPP printer attributes for URI: {uri}")
@@ -234,14 +243,12 @@ class CupsBackend:
             
             printer_info = attrs.get('printer-info', '')
             make_and_model = attrs.get('printer-make-and-model', '')
-            
             suggested_name = printer_info if printer_info else make_and_model
             
-            logger.info(f"Attributes fetched for '{uri}'. Suggested Name: '{suggested_name}'")
             return {
                 "suggested_name": suggested_name,
                 "make_and_model": make_and_model
             }
         except Exception as e:
-            logger.error(f"Failed to fetch printer attributes for URI '{uri}': {e}")
+            logger.debug(f"Could not fetch printer attributes for URI '{uri}': {e}")
             return {}

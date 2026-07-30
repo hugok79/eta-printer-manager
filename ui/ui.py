@@ -252,6 +252,71 @@ class AddDeviceDialog(Gtk.Dialog):
             self.entry_name.set_text(clean_name)
             self.entry_uri.set_text(row.device_uri)
 
+            # 🚀 YENİ: Otomatik IPP Bilgisi Çekme ve En Uygun PPD Eşleştirme
+            self._auto_match_device(row.device_name, row.device_uri)
+
+    def _auto_match_device(self, dev_name, dev_uri):
+        """Ağ cihazı seçildiğinde arka planda en uygun PPD'yi bulur ve bilgileri çeker"""
+        def match_worker():
+            # 1. Backend'den IPP Özelliklerini Sorgula
+            attrs = {}
+            if hasattr(self.cups_backend, 'get_printer_attributes_by_uri'):
+                attrs = self.cups_backend.get_printer_attributes_by_uri(dev_uri)
+            
+            suggested_name = attrs.get("suggested_name", "")
+            make_and_model = attrs.get("make_and_model", "")
+
+            # 2. Model bilgisine göre sistemdeki en uygun PPD'yi ara
+            search_query = make_and_model if make_and_model else dev_name
+            best_ppd = None
+            if hasattr(self.cups_backend, 'find_best_ppd'):
+                best_ppd = self.cups_backend.find_best_ppd(search_query)
+
+            # 3. Arayüzü Ana İzlekte (Main Thread) Güvenle Güncelle
+            GLib.idle_add(self._apply_auto_match, suggested_name, best_ppd)
+
+        threading.Thread(target=match_worker, daemon=True).start()
+
+    def _apply_auto_match(self, suggested_name, best_ppd):
+        """Bulunan PPD ve ismi arayüzdeki kutucuklara yansıtır"""
+        if suggested_name:
+            clean_name = suggested_name.replace(" ", "_").replace("-", "_").replace("/", "_")
+            self.entry_name.set_text(clean_name)
+
+        if not best_ppd:
+            return
+
+        model = self.combo_driver.get_model()
+
+        # 1. Menüde önceden eklenmiş tüm "Auto Matched" (★) satırlarını temizle
+        if model:
+            iters_to_remove = []
+            it = model.get_iter_first()
+            while it:
+                label = model.get_value(it, 1) # 1. Sütun görünen isimdir
+                if label and "Auto Matched" in label:
+                    iters_to_remove.append(it)
+                it = model.iter_next(it)
+            
+            for it in iters_to_remove:
+                model.remove(it)
+
+        # 2. Eğer bulunan PPD varsayılan jenerik sürücülerden biriyse, direkt listeden seç (Yeni yıldız ekleme!)
+        default_ids = [
+            "drv:///sample.drv/generic.ppd",
+            "drv:///sample.drv/pcl5e.ppd",
+            "everywhere",
+            "raw"
+        ]
+
+        if best_ppd in default_ids:
+            self.combo_driver.set_active_id(best_ppd)
+        else:
+            # 3. Yalnızca sisteme özel GERÇEK bir PPD bulunduysa yıldız ile en üste ekle ve seç
+            display_label = f"★ {best_ppd.split('/')[-1]} (Auto Matched)"
+            self.combo_driver.prepend(best_ppd, display_label)
+            self.combo_driver.set_active_id(best_ppd)
+
     def get_result(self):
         active_id = self.combo_driver.get_active_id()
         if not active_id:
