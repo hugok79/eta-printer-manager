@@ -218,3 +218,30 @@ class CupsBackend:
         except Exception as e:
             logger.error(f"Failed to open print queue for '{printer_name}': {e}")
             return False
+
+    def get_printer_attributes_by_uri(self, uri):
+        """
+        Henüz eklenmemiş bir ağ/IPP yazıcısının URI adresinden
+        marka, model ve isim özelliklerini çekerek otomatik doldurma verisi sağlar.
+        """
+        if not uri:
+            return {}
+        
+        logger.debug(f"Fetching IPP printer attributes for URI: {uri}")
+        try:
+            conn = self.conn if self.conn else cups.Connection()
+            attrs = conn.getPrinterAttributes(uri=uri)
+            
+            printer_info = attrs.get('printer-info', '')
+            make_and_model = attrs.get('printer-make-and-model', '')
+            
+            suggested_name = printer_info if printer_info else make_and_model
+            
+            logger.info(f"Attributes fetched for '{uri}'. Suggested Name: '{suggested_name}'")
+            return {
+                "suggested_name": suggested_name,
+                "make_and_model": make_and_model
+            }
+        except Exception as e:
+            logger.error(f"Failed to fetch printer attributes for URI '{uri}': {e}")
+            return {}
