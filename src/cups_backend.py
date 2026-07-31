@@ -16,7 +16,7 @@ class CupsBackend:
     def get_printers(self):
         logger.debug("Fetching printer list from CUPS...")
         try:
-            # Thread-safe: Arka plan thread'leri için bağımsız bağlantı oluştur
+            # Thread-safe: For background threads, create an independent connection
             conn = cups.Connection()
             printers = conn.getPrinters()
             logger.debug(f"Found {len(printers)} printers.")
@@ -74,7 +74,7 @@ class CupsBackend:
     def get_ppds(self):
         logger.debug("Fetching PPD list from CUPS...")
         try:
-            # Thread-safe: Arka plan thread'leri için bağımsız bağlantı oluştur
+            # Thread-safe: For background threads, create an independent connection
             conn = cups.Connection()
             ppds = conn.getPPDs()
             logger.debug(f"Found {len(ppds)} PPD drivers.")
@@ -116,10 +116,10 @@ class CupsBackend:
         if not self.conn:
             return False
         
-        # 1. Standart renkli/logolu CUPS test sayfasının yolu
+        # 1. Standard color/logo CUPS test page path
         test_file_path = "/usr/share/cups/data/testprint"
         
-        # 2. Eğer sistemde bu dosya yoksa eski sade metin dosyasına düş
+        # 2. If this file doesn't exist on the system, fall back to the old simple text file
         if not os.path.exists(test_file_path):
             test_file_path = "/tmp/pardus_test_page.txt"
             with open(test_file_path, "w") as f:
@@ -229,10 +229,10 @@ class CupsBackend:
 
     def get_printer_attributes_by_uri(self, uri):
         """
-        Henüz eklenmemiş bir ağ/IPP yazıcısının URI adresinden
-        marka, model ve isim özelliklerini çekerek otomatik doldurma verisi sağlar.
+        Retrieves brand, model, and name attributes from the URI address of a network/IPP printer 
+        that has not yet been added, providing data for automatic population.
         """
-        # Sadece IPP / HTTP protokollü ağ adreslerine sorgu at (cups-pdf:/, cups-brf:/, dnssd:// elenir)
+        # Only query network addresses with IPP / HTTP protocols (exclude cups-pdf:/, cups-brf:/, dnssd://)
         if not uri or not uri.startswith(("ipp://", "ipps://", "http://", "https://")):
             return {}
         

@@ -17,14 +17,14 @@ from src.locale_config import _
 
 
 def load_css():
-    # Öncelik 1: Projenin kendi klasöründeki yerel style.css
+    # Priority 1: The local style.css file in the project's own folder
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     css_path = os.path.join(base_dir, "data", "style.css")
     
     if not os.path.exists(css_path):
         css_path = os.path.abspath(os.path.join("data", "style.css"))
     
-    # Öncelik 2: Eğer projede yoksa sistemdeki kurulu dosya (Fallback)
+    # Priority 2: If not present in the project, use the file installed in the system (Fallback)
     if not os.path.exists(css_path):
         css_path = "/usr/share/pardus/eta-printer-manager/data/style.css"
 
@@ -84,7 +84,7 @@ class AddDeviceDialog(Gtk.Dialog):
         hbox_driver = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         self.combo_driver = Gtk.ComboBoxText()
         
-        # Standart/Genel Sürücüler (Disk taraması yapılmaz)
+        # Standard/General Drivers (No disk scan is performed)
         self.combo_driver.append("drv:///sample.drv/generic.ppd", _("Generic PostScript Printer"))
         self.combo_driver.append("drv:///sample.drv/pcl5e.ppd", _("Generic PCL Laser Printer"))
         self.combo_driver.append("everywhere", _("IPP Everywhere (Driverless)"))
@@ -133,7 +133,7 @@ class AddDeviceDialog(Gtk.Dialog):
         scroll.add(self.listbox)
         vbox_main.pack_start(scroll, True, True, 0)
 
-        # Sadece hızlı ağ araması başlatılır
+        # Fast network scan starts only
         GLib.idle_add(self._start_discovery)
 
     def _on_browse_ppd_clicked(self, button):
@@ -160,7 +160,7 @@ class AddDeviceDialog(Gtk.Dialog):
         dialog.destroy()
 
     def _start_discovery(self):
-        """Ağ ve sistem üzerindeki yazıcıları tarar"""
+        """Network and system printers are scanned"""
         self.spinner.start()
 
         def scan_worker():
@@ -181,7 +181,7 @@ class AddDeviceDialog(Gtk.Dialog):
                 "print(json.dumps(devs))\n"
             )
             try:
-                # Ağ paketlerinin toplanması için zaman aşımı 8 saniyeye çıkarıldı
+                # Timeout increased to 8 seconds to allow network packet collection
                 out = subprocess.check_output(
                     [sys.executable, "-c", py_script],
                     text=True,
@@ -252,13 +252,13 @@ class AddDeviceDialog(Gtk.Dialog):
             self.entry_name.set_text(clean_name)
             self.entry_uri.set_text(row.device_uri)
 
-            # 🚀 YENİ: Otomatik IPP Bilgisi Çekme ve En Uygun PPD Eşleştirme
+            # Auto IPP Information Fetching and Best PPD Matching
             self._auto_match_device(row.device_name, row.device_uri)
 
     def _auto_match_device(self, dev_name, dev_uri):
-        """Ağ cihazı seçildiğinde arka planda en uygun PPD'yi bulur ve bilgileri çeker"""
+        """When a network device is selected, it finds the most suitable PPD in the background and retrieves information."""
         def match_worker():
-            # 1. Backend'den IPP Özelliklerini Sorgula
+            # Query IPP Attributes from Backend
             attrs = {}
             if hasattr(self.cups_backend, 'get_printer_attributes_by_uri'):
                 attrs = self.cups_backend.get_printer_attributes_by_uri(dev_uri)
@@ -266,19 +266,19 @@ class AddDeviceDialog(Gtk.Dialog):
             suggested_name = attrs.get("suggested_name", "")
             make_and_model = attrs.get("make_and_model", "")
 
-            # 2. Model bilgisine göre sistemdeki en uygun PPD'yi ara
+            # Search for the most suitable PPD in the system according to the model information
             search_query = make_and_model if make_and_model else dev_name
             best_ppd = None
             if hasattr(self.cups_backend, 'find_best_ppd'):
                 best_ppd = self.cups_backend.find_best_ppd(search_query)
 
-            # 3. Arayüzü Ana İzlekte (Main Thread) Güvenle Güncelle
+            # Update the User Interface on the Main Thread
             GLib.idle_add(self._apply_auto_match, suggested_name, best_ppd)
 
         threading.Thread(target=match_worker, daemon=True).start()
 
     def _apply_auto_match(self, suggested_name, best_ppd):
-        """Bulunan PPD ve ismi arayüzdeki kutucuklara yansıtır"""
+        """Reflects the found PPD and name to the interface boxes."""
         if suggested_name:
             clean_name = suggested_name.replace(" ", "_").replace("-", "_").replace("/", "_")
             self.entry_name.set_text(clean_name)
@@ -288,12 +288,12 @@ class AddDeviceDialog(Gtk.Dialog):
 
         model = self.combo_driver.get_model()
 
-        # 1. Menüde önceden eklenmiş tüm "Auto Matched" (★) satırlarını temizle
+        # Remove all previously added "Auto Matched" (★) entries from the menu
         if model:
             iters_to_remove = []
             it = model.get_iter_first()
             while it:
-                label = model.get_value(it, 1) # 1. Sütun görünen isimdir
+                label = model.get_value(it, 1) # Column 1 is the display name
                 if label and "Auto Matched" in label:
                     iters_to_remove.append(it)
                 it = model.iter_next(it)
@@ -301,7 +301,7 @@ class AddDeviceDialog(Gtk.Dialog):
             for it in iters_to_remove:
                 model.remove(it)
 
-        # 2. Eğer bulunan PPD varsayılan jenerik sürücülerden biriyse, direkt listeden seç (Yeni yıldız ekleme!)
+        # If the found PPD is one of the default generic drivers, select it directly from the list (Do not add a new star!)
         default_ids = [
             "drv:///sample.drv/generic.ppd",
             "drv:///sample.drv/pcl5e.ppd",
@@ -312,7 +312,7 @@ class AddDeviceDialog(Gtk.Dialog):
         if best_ppd in default_ids:
             self.combo_driver.set_active_id(best_ppd)
         else:
-            # 3. Yalnızca sisteme özel GERÇEK bir PPD bulunduysa yıldız ile en üste ekle ve seç
+            # Only add and select the REAL system-specific PPD with a star at the top
             display_label = f"★ {best_ppd.split('/')[-1]} (Auto Matched)"
             self.combo_driver.prepend(best_ppd, display_label)
             self.combo_driver.set_active_id(best_ppd)
@@ -532,7 +532,7 @@ class MainWindow(Gtk.Window):
         GLib.idle_add(self.load_devices)
 
     def show_error_dialog(self, title, message):
-        """Kullanıcıya detaylı hata bildirim penceresi gösterir"""
+        """Shows a detailed error notification window to the user."""
         dialog = Gtk.MessageDialog(
             transient_for=self,
             flags=0,
@@ -612,15 +612,15 @@ class MainWindow(Gtk.Window):
         return printers, {}, default_printer
 
     def _on_devices_loaded(self, result, error):
-        # Butonu hemen açmak yerine 5 saniyelik bekleme süresi (cooldown) koyuyoruz
+        # Button re-enable time delay (cooldown) is set to 5 seconds
         if hasattr(self, 'btn_refresh'):
             def reenable_refresh():
                 if hasattr(self, 'btn_refresh') and self.btn_refresh:
                     self.btn_refresh.set_sensitive(True)
                     logger.debug("Refresh button re-enabled after 5 seconds cooldown.")
-                return False  # GLib zamanlayıcısını tek seferden sonra kapatır
+                return False  # GLib timer closes after one run
 
-            # 5 saniye sonra reenable_refresh fonksiyonunu çalıştır
+            # Run reenable_refresh function after 5 seconds
             GLib.timeout_add_seconds(5, reenable_refresh)
 
         if error:
@@ -628,7 +628,6 @@ class MainWindow(Gtk.Window):
             return
 
         printers, scanners, default_printer = result
-        # ... (metodun geri kalan kodları olduğu gibi kalsın) ...
 
         if isinstance(printers, dict):
             for name in printers.keys():

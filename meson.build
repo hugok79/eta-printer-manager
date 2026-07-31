@@ -3,30 +3,30 @@ project('eta-printer-manager',
   meson_version: '>= 0.50.0'
 )
 
-# 1. Ana dizinler
+# 1. Imports and modules
 i18n = import('i18n')
 
-# 2. Çalıştırılabilir ana betik (/usr/bin/eta-printer-manager olarak kurulur)
+# 2. Main executable script (installed to /usr/bin/eta-printer-manager)
 install_data('eta-printer-manager',
   install_dir: '/usr/bin'
 )
 
-# 3. Backend Python kodları
+# 3. Backend Python source code
 install_subdir('src',
   install_dir: '/usr/share/pardus/eta-printer-manager'
 )
 
-# 4. Arayüz Python kodları
+# 4. UI Python source code
 install_subdir('ui',
   install_dir: '/usr/share/pardus/eta-printer-manager'
 )
 
-# 5. Stil ve Veri dosyaları
+# 5. Style and data files
 install_subdir('data',
   install_dir: '/usr/share/pardus/eta-printer-manager'
 )
 
-# 6. Masaüstü Kısayolu (.desktop)
+# 6. Desktop entry shortcut (.desktop)
 install_data('data/eta-printer-manager.desktop',
   install_dir: '/usr/share/applications'
 )

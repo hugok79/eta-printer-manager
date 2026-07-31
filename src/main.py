@@ -1,18 +1,17 @@
 import sys
 import os
 
-# Kök dizini (/usr/share/pardus/eta-printer-manager) Python yoluna ekle
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, Gtk
 
-# Görev yöneticisinde ve sistem süreçlerinde uygulamanın adını belirler:
+# Sets application name in system processes (task manager)
 GLib.set_prgname("eta-printer-manager")
 GLib.set_application_name("Printers and Scanners")
 
-# Modül importları
+# Module imports
 from src.cups_backend import CupsBackend
 from src.scanner_backend import ScannerBackend
 from ui.ui import MainWindow
@@ -20,16 +19,16 @@ from ui.ui import MainWindow
 
 
 def main():
-    # Motorları ilklendir
+    # Initialize motors
     cups_backend = CupsBackend()
     scanner_backend = ScannerBackend()
 
-    # Ana arayüzü başlat ve motorları enjekte et
+    # Start main interface and inject motors
     win = MainWindow(cups_backend, scanner_backend)
     win.connect("destroy", Gtk.main_quit)
     win.show_all()
 
-    # GTK Ana Döngüsü
+    # GTK Main Loop
     Gtk.main()
 
 if __name__ == "__main__":

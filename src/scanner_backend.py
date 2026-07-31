@@ -19,14 +19,14 @@ class ScannerBackend:
                         description = match.group(2)
                         
                         scanners[device_id] = {
-                            'printer-state-message': 'Hazır (Tarayıcı)',
+                            'printer-state-message': 'Hazır (Scanner)',
                             'device-class': 'scanner',
                             'description': description
                         }
             return scanners
         except FileNotFoundError:
-            print("Tarayıcı sistemi (SANE) bulunamadı.")
+            print("Scanner system (SANE) not found.")
             return {}
         except Exception as e:
-            print(f"Tarayıcılar alınamadı: {e}")
+            print(f"Failed to get scanners: {e}")
             return {}
