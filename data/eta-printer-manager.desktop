@@ -1,6 +1,8 @@
 [Desktop Entry]
 Name=ETA Printer Manager
-Comment=ETA Printer Manager
+Name[tr]=ETA Yazıcı Yöneticisi
+Comment=Manage your printers and scanners
+Comment[tr]=Yazıcı ve tarayıcılarınızı yönetin
 Exec=eta-printer-manager
 Icon=eta-printer-manager
 Terminal=false
