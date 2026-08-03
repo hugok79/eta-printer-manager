@@ -1,3 +1,23 @@
+eta-printer-manager (1.0.2) unstable; urgency=medium
+
+  [ AliOzbek ]
+  * Add README.md
+  * Replace subprocess with native pycups methods
+  *  Add automatic PPD resolution and pure CUPS API addition
+  * Add get_printer_attributes_by_uri method for IPP auto-fill
+  * The GIL thread crash in the CUPS backend has been fixed and an official colour test page has been added
+  * Translate all module, code comments, and strings to English
+  * Update main window and dialogs using glade xml
+  * i18n: add turkish translations and configure gettext domains
+
+  [ Fatih Altun ]
+  * Add eta-printer-manager icon
+  * Add install icon to meson
+  * Add tr to desktop file
+  * Update version to 1.0.2
+
+ -- Fatih Altun <fatih.altun@pardus.org.tr>  Mon, 03 Aug 2026 18:04:13 +0300
+
 eta-printer-manager (1.0.1) unstable; urgency=medium
 
   * Added logging system and detailed CUPS error handling.
