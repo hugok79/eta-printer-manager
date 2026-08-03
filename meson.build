@@ -31,4 +31,9 @@ install_data('data/eta-printer-manager.desktop',
   install_dir: '/usr/share/applications'
 )
 
+# 7. App icon
+install_data('data/eta-printer-manager.svg',
+  install_dir: '/usr/share/icons/hicolor/scalable/apps'
+)
+
 subdir('po')
