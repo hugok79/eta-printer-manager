@@ -1,0 +1,196 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-03 13:43+0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ui/ui.py:78
+msgid "Generic PostScript Printer"
+msgstr ""
+
+#: ui/ui.py:79
+msgid "Generic PCL Laser Printer"
+msgstr ""
+
+#: ui/ui.py:80
+msgid "IPP Everywhere (Driverless)"
+msgstr ""
+
+#: ui/ui.py:81
+msgid "Raw Queue (No Driver)"
+msgstr ""
+
+#: ui/ui.py:93
+msgid "Select PPD File"
+msgstr ""
+
+#: ui/ui.py:98 data/main_window.glade:156
+msgid "Cancel"
+msgstr ""
+
+#: ui/ui.py:99
+msgid "Open"
+msgstr ""
+
+#: ui/ui.py:102
+msgid "PPD Files (*.ppd, *.ppd.gz)"
+msgstr ""
+
+#: ui/ui.py:157
+msgid "No automatic devices found. Please add manually above."
+msgstr ""
+
+#: ui/ui.py:308
+msgid "Printer"
+msgstr ""
+
+#: ui/ui.py:308
+msgid "Scanner"
+msgstr ""
+
+#: ui/ui.py:326 ui/ui.py:328
+msgid "Open Queue"
+msgstr ""
+
+#: ui/ui.py:330
+msgid "Test Page"
+msgstr ""
+
+#: ui/ui.py:332
+msgid "Send Test Page"
+msgstr ""
+
+#: ui/ui.py:334
+msgid "Default"
+msgstr ""
+
+#: ui/ui.py:334
+msgid "Set as Default"
+msgstr ""
+
+#: ui/ui.py:340
+msgid "Set as Default Printer"
+msgstr ""
+
+#: ui/ui.py:342
+msgid "Pause"
+msgstr ""
+
+#: ui/ui.py:344
+msgid "Pause Printer"
+msgstr ""
+
+#: ui/ui.py:346
+msgid "Remove"
+msgstr ""
+
+#: ui/ui.py:348
+msgid "Remove Printer"
+msgstr ""
+
+#: ui/ui.py:388
+#, python-brace-format
+msgid "Do you want to perform '{1}' action for device '{0}'?"
+msgstr ""
+
+#: ui/ui.py:479
+msgid "Backend error"
+msgstr ""
+
+#: ui/ui.py:499
+msgid "Success"
+msgstr ""
+
+#: ui/ui.py:499
+msgid "Device added successfully."
+msgstr ""
+
+#: ui/ui.py:504
+msgid "Failed to Add Device"
+msgstr ""
+
+#: ui/ui.py:505
+#, python-brace-format
+msgid ""
+"An error occurred while adding the printer:\n"
+"\n"
+"{0}"
+msgstr ""
+
+#: ui/ui.py:505
+msgid "Unknown error"
+msgstr ""
+
+#: ui/ui.py:555
+msgid "Default Printer"
+msgstr ""
+
+#: ui/ui.py:555
+msgid "Idle"
+msgstr ""
+
+#: data/main_window.glade:8 data/main_window.glade:15 data/main_window.glade:57
+msgid "Printers and Scanners"
+msgstr ""
+
+#: data/main_window.glade:86 data/main_window.glade:108
+#: data/main_window.glade:150
+msgid "Add Device"
+msgstr ""
+
+#: data/main_window.glade:97
+msgid "Add a printer or scanner on network or USB"
+msgstr ""
+
+#: data/main_window.glade:125
+msgid "Your Devices"
+msgstr ""
+
+#: data/main_window.glade:166
+msgid "Add"
+msgstr ""
+
+#: data/main_window.glade:196
+msgid "Add Device Manually"
+msgstr ""
+
+#: data/main_window.glade:213
+msgid "Device Name:"
+msgstr ""
+
+#: data/main_window.glade:229
+msgid "e.g. Office_Printer"
+msgstr ""
+
+#: data/main_window.glade:240
+msgid "Connection Address (URI):"
+msgstr ""
+
+#: data/main_window.glade:256
+msgid "e.g. ipp://192.168.1.50/ipp/print"
+msgstr ""
+
+#: data/main_window.glade:267
+msgid "Driver (PPD):"
+msgstr ""
+
+#: data/main_window.glade:296
+msgid "Browse PPD..."
+msgstr ""
+
+#: data/main_window.glade:331
+msgid "Devices Found on Network and System"
+msgstr ""

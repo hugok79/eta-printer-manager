@@ -12,3 +12,4 @@ build/
 *.buildinfo
 *.changes
 obj-x86_64-linux-gnu/
+*.mo

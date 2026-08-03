@@ -1,0 +1,6 @@
+data/main_window.glade
+ui/ui.py
+src/cups_backend.py
+src/scanner_backend.py
+src/notifications.py
+src/main.py

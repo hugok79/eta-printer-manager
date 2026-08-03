@@ -17,14 +17,13 @@ from src.locale_config import _
 
 
 def load_css():
-    # Priority 1: The local style.css file in the project's own folder
+    """Loads application CSS stylesheet."""
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     css_path = os.path.join(base_dir, "data", "style.css")
     
     if not os.path.exists(css_path):
         css_path = os.path.abspath(os.path.join("data", "style.css"))
     
-    # Priority 2: If not present in the project, use the file installed in the system (Fallback)
     if not os.path.exists(css_path):
         css_path = "/usr/share/pardus/eta-printer-manager/data/style.css"
 
@@ -38,108 +37,62 @@ def load_css():
         )
 
 
-class AddDeviceDialog(Gtk.Dialog):
-    """Manual Addition + Automatic Network Scanning Dialog"""
-    def __init__(self, parent, cups_backend, scanner_backend):
-        super().__init__(title=_("Add Device"), transient_for=parent)
+def get_glade_path():
+    """Resolves the path to main_window.glade UI schema file."""
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    glade_path = os.path.join(base_dir, "data", "main_window.glade")
+    
+    if not os.path.exists(glade_path):
+        glade_path = os.path.abspath(os.path.join("data", "main_window.glade"))
+    
+    if not os.path.exists(glade_path):
+        glade_path = "/usr/share/pardus/eta-printer-manager/data/main_window.glade"
+
+    return glade_path
+
+
+class AddDeviceDialog:
+    """Manual Addition + Automatic Network Scanning Dialog (Gtk.Builder)"""
+    def __init__(self, parent_window, cups_backend, scanner_backend):
         self.cups_backend = cups_backend
         self.scanner_backend = scanner_backend
-        self.set_modal(True)
-        self.set_default_size(540, 520)
 
-        # Bottom Buttons
-        self.btn_cancel = self.add_button(_("Cancel"), Gtk.ResponseType.CANCEL)
-        self.btn_cancel.get_style_context().add_class("btn-secondary")
+        # Load Glade XML interface
+        self.builder = Gtk.Builder()
+        self.builder.set_translation_domain("eta-printer-manager")
+        self.builder.add_from_file(get_glade_path())
 
-        self.btn_add = self.add_button(_("Add"), Gtk.ResponseType.OK)
-        self.btn_add.get_style_context().add_class("btn-primary")
-
-        content_area = self.get_content_area()
-        vbox_main = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
-        vbox_main.set_border_width(18)
-        content_area.add(vbox_main)
-
-        # ─── SECTION 1: Manual Device Addition ───
-        lbl_manual = Gtk.Label(label=_("Add Device Manually"), xalign=0)
-        lbl_manual.get_style_context().add_class("card-title")
-        vbox_main.pack_start(lbl_manual, False, False, 0)
-
-        grid = Gtk.Grid()
-        grid.set_column_spacing(12)
-        grid.set_row_spacing(10)
-
-        lbl_name = Gtk.Label(label=_("Device Name:"), xalign=0)
-        lbl_name.get_style_context().add_class("card-subtitle")
-        self.entry_name = Gtk.Entry()
-        self.entry_name.set_placeholder_text(_("e.g. Office_Printer"))
-
-        lbl_uri = Gtk.Label(label=_("Connection Address (URI):"), xalign=0)
-        lbl_uri.get_style_context().add_class("card-subtitle")
-        self.entry_uri = Gtk.Entry()
-        self.entry_uri.set_placeholder_text(_("e.g. ipp://192.168.1.50/ipp/print"))
-
-        lbl_driver = Gtk.Label(label=_("Driver (PPD):"), xalign=0)
-        lbl_driver.get_style_context().add_class("card-subtitle")
+        self.dialog = self.builder.get_object("add_device_dialog")
         
-        hbox_driver = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        self.combo_driver = Gtk.ComboBoxText()
-        
-        # Standard/General Drivers (No disk scan is performed)
+        parent_widget = parent_window.window if hasattr(parent_window, 'window') else parent_window
+        self.dialog.set_transient_for(parent_widget)
+
+        # Retrieve widget references from Builder
+        self.entry_name = self.builder.get_object("entry_name")
+        self.entry_uri = self.builder.get_object("entry_uri")
+        self.combo_driver = self.builder.get_object("combo_driver")
+        self.btn_browse_ppd = self.builder.get_object("btn_browse_ppd")
+        self.spinner = self.builder.get_object("spinner_discovery")
+        self.listbox = self.builder.get_object("listbox_discovered")
+
+        # Standard/General Drivers
         self.combo_driver.append("drv:///sample.drv/generic.ppd", _("Generic PostScript Printer"))
         self.combo_driver.append("drv:///sample.drv/pcl5e.ppd", _("Generic PCL Laser Printer"))
         self.combo_driver.append("everywhere", _("IPP Everywhere (Driverless)"))
         self.combo_driver.append("raw", _("Raw Queue (No Driver)"))
         self.combo_driver.set_active(0)
 
-        btn_browse_ppd = Gtk.Button(label=_("Browse PPD..."))
-        btn_browse_ppd.get_style_context().add_class("btn-secondary")
-        btn_browse_ppd.connect("clicked", self._on_browse_ppd_clicked)
-
-        hbox_driver.pack_start(self.combo_driver, True, True, 0)
-        hbox_driver.pack_start(btn_browse_ppd, False, False, 0)
-
-        grid.attach(lbl_name, 0, 0, 1, 1)
-        grid.attach(self.entry_name, 1, 0, 1, 1)
-        grid.attach(lbl_uri, 0, 1, 1, 1)
-        grid.attach(self.entry_uri, 1, 1, 1, 1)
-        grid.attach(lbl_driver, 0, 2, 1, 1)
-        grid.attach(hbox_driver, 1, 2, 1, 1)
-
-        self.entry_name.set_hexpand(True)
-        self.entry_uri.set_hexpand(True)
-        hbox_driver.set_hexpand(True)
-        vbox_main.pack_start(grid, False, False, 0)
-
-        # Separator
-        vbox_main.pack_start(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL), False, False, 4)
-
-        # ─── SECTION 2: Network & System Discovered Devices ───
-        hbox_auto_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        lbl_auto = Gtk.Label(label=_("Devices Found on Network and System"), xalign=0)
-        lbl_auto.get_style_context().add_class("card-title")
-        hbox_auto_header.pack_start(lbl_auto, True, True, 0)
-
-        self.spinner = Gtk.Spinner()
-        hbox_auto_header.pack_end(self.spinner, False, False, 0)
-        vbox_main.pack_start(hbox_auto_header, False, False, 0)
-
-        scroll = Gtk.ScrolledWindow()
-        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        scroll.set_min_content_height(180)
-
-        self.listbox = Gtk.ListBox()
-        self.listbox.set_selection_mode(Gtk.SelectionMode.SINGLE)
+        # Connect Signals
+        self.btn_browse_ppd.connect("clicked", self._on_browse_ppd_clicked)
         self.listbox.connect("row-selected", self._on_device_selected)
-        scroll.add(self.listbox)
-        vbox_main.pack_start(scroll, True, True, 0)
 
-        # Fast network scan starts only
+        # Start network discovery
         GLib.idle_add(self._start_discovery)
 
     def _on_browse_ppd_clicked(self, button):
         dialog = Gtk.FileChooserDialog(
             title=_("Select PPD File"),
-            parent=self,
+            parent=self.dialog,
             action=Gtk.FileChooserAction.OPEN
         )
         dialog.add_buttons(
@@ -181,7 +134,6 @@ class AddDeviceDialog(Gtk.Dialog):
                 "print(json.dumps(devs))\n"
             )
             try:
-                # Timeout increased to 8 seconds to allow network packet collection
                 out = subprocess.check_output(
                     [sys.executable, "-c", py_script],
                     text=True,
@@ -252,13 +204,11 @@ class AddDeviceDialog(Gtk.Dialog):
             self.entry_name.set_text(clean_name)
             self.entry_uri.set_text(row.device_uri)
 
-            # Auto IPP Information Fetching and Best PPD Matching
             self._auto_match_device(row.device_name, row.device_uri)
 
     def _auto_match_device(self, dev_name, dev_uri):
-        """When a network device is selected, it finds the most suitable PPD in the background and retrieves information."""
+        """Finds the most suitable PPD in the background."""
         def match_worker():
-            # Query IPP Attributes from Backend
             attrs = {}
             if hasattr(self.cups_backend, 'get_printer_attributes_by_uri'):
                 attrs = self.cups_backend.get_printer_attributes_by_uri(dev_uri)
@@ -266,19 +216,17 @@ class AddDeviceDialog(Gtk.Dialog):
             suggested_name = attrs.get("suggested_name", "")
             make_and_model = attrs.get("make_and_model", "")
 
-            # Search for the most suitable PPD in the system according to the model information
             search_query = make_and_model if make_and_model else dev_name
             best_ppd = None
             if hasattr(self.cups_backend, 'find_best_ppd'):
                 best_ppd = self.cups_backend.find_best_ppd(search_query)
 
-            # Update the User Interface on the Main Thread
             GLib.idle_add(self._apply_auto_match, suggested_name, best_ppd)
 
         threading.Thread(target=match_worker, daemon=True).start()
 
     def _apply_auto_match(self, suggested_name, best_ppd):
-        """Reflects the found PPD and name to the interface boxes."""
+        """Reflects the found PPD and name to the interface."""
         if suggested_name:
             clean_name = suggested_name.replace(" ", "_").replace("-", "_").replace("/", "_")
             self.entry_name.set_text(clean_name)
@@ -288,12 +236,11 @@ class AddDeviceDialog(Gtk.Dialog):
 
         model = self.combo_driver.get_model()
 
-        # Remove all previously added "Auto Matched" (★) entries from the menu
         if model:
             iters_to_remove = []
             it = model.get_iter_first()
             while it:
-                label = model.get_value(it, 1) # Column 1 is the display name
+                label = model.get_value(it, 1)
                 if label and "Auto Matched" in label:
                     iters_to_remove.append(it)
                 it = model.iter_next(it)
@@ -301,7 +248,6 @@ class AddDeviceDialog(Gtk.Dialog):
             for it in iters_to_remove:
                 model.remove(it)
 
-        # If the found PPD is one of the default generic drivers, select it directly from the list (Do not add a new star!)
         default_ids = [
             "drv:///sample.drv/generic.ppd",
             "drv:///sample.drv/pcl5e.ppd",
@@ -312,7 +258,6 @@ class AddDeviceDialog(Gtk.Dialog):
         if best_ppd in default_ids:
             self.combo_driver.set_active_id(best_ppd)
         else:
-            # Only add and select the REAL system-specific PPD with a star at the top
             display_label = f"★ {best_ppd.split('/')[-1]} (Auto Matched)"
             self.combo_driver.prepend(best_ppd, display_label)
             self.combo_driver.set_active_id(best_ppd)
@@ -323,12 +268,20 @@ class AddDeviceDialog(Gtk.Dialog):
             active_id = "drv:///sample.drv/generic.ppd"
         return self.entry_name.get_text().strip(), self.entry_uri.get_text().strip(), active_id
 
+    def connect(self, signal_name, callback):
+        self.dialog.connect(signal_name, callback)
+
+    def show_all(self):
+        self.dialog.show_all()
+
+    def destroy(self):
+        self.dialog.destroy()
+
 
 class DeviceCard(Gtk.Box):
+    """Dynamic Card Widget for Printers and Scanners"""
     def __init__(self, name, device_type, status_text, parent_window, is_default=False):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-
-        
 
         self.get_style_context().add_class("device-card")
         self.name = name
@@ -417,8 +370,9 @@ class DeviceCard(Gtk.Box):
         self.arrow_icon.set_from_icon_name(icon_name, Gtk.IconSize.BUTTON)
 
     def _confirm_dialog(self, title, message):
+        parent_widget = self.parent_window.window if hasattr(self.parent_window, 'window') else self.parent_window
         dialog = Gtk.MessageDialog(
-            transient_for=self.parent_window,
+            transient_for=parent_widget,
             flags=0,
             message_type=Gtk.MessageType.QUESTION,
             buttons=Gtk.ButtonsType.OK_CANCEL,
@@ -462,79 +416,49 @@ class DeviceCard(Gtk.Box):
                 self.parent_window.load_devices()
 
 
-class MainWindow(Gtk.Window):
+class MainWindow:
+    """Main Application Window loaded via Gtk.Builder (Glade XML)"""
     def __init__(self, cups_backend=None, scanner_backend=None):
-        super().__init__(title=_("Printers and Scanners"))
-        self.set_default_size(750, 600)
         load_css()
 
         self.cups = cups_backend if cups_backend else CupsBackend()
         self.scanner = scanner_backend if scanner_backend else ScannerBackend()
         self.notifier = NotificationManager()
 
-        header = Gtk.HeaderBar()
-        header.set_show_close_button(True)
-        header.set_title(_("Printers and Scanners"))
-        self.set_titlebar(header)
+        # Load Glade UI with translation domain
+        self.builder = Gtk.Builder()
+        self.builder.set_translation_domain("eta-printer-manager") 
+        self.builder.add_from_file(get_glade_path())
 
-        self.btn_refresh = Gtk.Button.new_from_icon_name("view-refresh-symbolic", Gtk.IconSize.BUTTON)
-        self.btn_refresh.get_style_context().add_class("top-icon-btn")
+        # Retrieve widget references from Builder
+        self.window = self.builder.get_object("main_window")
+        self.btn_refresh = self.builder.get_object("btn_refresh")
+        self.btn_add_device = self.builder.get_object("btn_add_device")
+        self.device_list_box = self.builder.get_object("device_list_box")
+
+        # Connect Window & Button Signals
+        self.window.connect("destroy", Gtk.main_quit)
         self.btn_refresh.connect("clicked", lambda x: self.load_devices())
-
-        header.pack_end(self.btn_refresh)
-
-        scroll = Gtk.ScrolledWindow()
-        self.add(scroll)
-
-        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
-        main_box.set_margin_start(12)
-        main_box.set_margin_end(12)
-        main_box.set_margin_top(12)
-        main_box.set_margin_bottom(12)
-
-        scroll.add(main_box)
-
-        lbl_main = Gtk.Label(label=_("Printers and Scanners"), xalign=0)
-        lbl_main.get_style_context().add_class("main-title")
-        lbl_main.set_margin_left(12)
-        main_box.pack_start(lbl_main, False, False, 0)
-
-        add_card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16)
-        add_card.get_style_context().add_class("add-device-card")
-        add_card.set_margin_left(6)
-        add_card.set_margin_right(6)
-
-        add_text_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
-        add_title = Gtk.Label(label=_("Add Device"), xalign=0)
-        add_title.get_style_context().add_class("card-title")
-        add_sub = Gtk.Label(label=_("Add a printer or scanner on network or USB"), xalign=0)
-        add_sub.get_style_context().add_class("card-subtitle")
-
-        add_text_box.pack_start(add_title, False, False, 0)
-        add_text_box.pack_start(add_sub, False, False, 0)
-        add_card.pack_start(add_text_box, True, True, 0)
-
-        btn_add_device = Gtk.Button(label=_("Add Device"))
-        btn_add_device.get_style_context().add_class("btn-primary")
-        btn_add_device.connect("clicked", self._on_add_device_clicked)
-        add_card.pack_end(btn_add_device, False, False, 0)
-
-        main_box.pack_start(add_card, False, False, 0)
-
-        lbl_section = Gtk.Label(label=_("Your Devices"), xalign=0)
-        lbl_section.get_style_context().add_class("section-title")
-        lbl_section.set_margin_left(12)
-        main_box.pack_start(lbl_section, False, False, 0)
-
-        self.device_list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
-        main_box.pack_start(self.device_list_box, True, True, 0)
+        self.btn_add_device.connect("clicked", self._on_add_device_clicked)
 
         GLib.idle_add(self.load_devices)
 
+    def connect(self, signal_name, callback, *args):
+        """Proxies connect calls to the underlying GTK Window object."""
+        return self.window.connect(signal_name, callback, *args)
+
+    def show_all(self):
+        """Shows the window and all child widgets."""
+        self.window.show_all()
+
+    def show(self):
+        """Shows the window."""
+        self.window.show()
+
     def show_error_dialog(self, title, message):
-        """Shows a detailed error notification window to the user."""
+        """Shows error dialog to the user."""
         dialog = Gtk.MessageDialog(
-            transient_for=self,
+            transient_for=self.window,
             flags=0,
             message_type=Gtk.MessageType.ERROR,
             buttons=Gtk.ButtonsType.OK,
@@ -546,11 +470,12 @@ class MainWindow(Gtk.Window):
 
     def _on_add_device_clicked(self, button):
         button.set_sensitive(False)
-        dialog = AddDeviceDialog(self, self.cups, self.scanner)
+        add_dialog = AddDeviceDialog(self, self.cups, self.scanner)
 
-        def on_response(dlg, response_id):
+        def on_response(gtk_dialog, response_id):
             if response_id == Gtk.ResponseType.OK:
-                name, uri, ppd = dlg.get_result()
+                # 'gtk_dialog' yerine wrapper nesnemiz olan 'add_dialog' üzerinden alıyoruz
+                name, uri, ppd = add_dialog.get_result()
                 if name and uri:
                     def add_task():
                         result = (False, _("Backend error"))
@@ -560,12 +485,11 @@ class MainWindow(Gtk.Window):
 
                     threading.Thread(target=add_task, daemon=True).start()
 
-            dlg.destroy()
+            add_dialog.destroy()
             button.set_sensitive(True)
 
-        dialog.connect("response", on_response)
-        dialog.show_all()
-
+        add_dialog.connect("response", on_response)
+        add_dialog.show_all()
     def _on_printer_added(self, result):
         if isinstance(result, tuple):
             success, error_msg = result
@@ -612,15 +536,13 @@ class MainWindow(Gtk.Window):
         return printers, {}, default_printer
 
     def _on_devices_loaded(self, result, error):
-        # Button re-enable time delay (cooldown) is set to 5 seconds
         if hasattr(self, 'btn_refresh'):
             def reenable_refresh():
                 if hasattr(self, 'btn_refresh') and self.btn_refresh:
                     self.btn_refresh.set_sensitive(True)
                     logger.debug("Refresh button re-enabled after 5 seconds cooldown.")
-                return False  # GLib timer closes after one run
+                return False
 
-            # Run reenable_refresh function after 5 seconds
             GLib.timeout_add_seconds(5, reenable_refresh)
 
         if error:

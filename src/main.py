@@ -3,6 +3,9 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+# Load locale and translation configuration first
+import src.locale_config
+
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, Gtk
@@ -15,7 +18,6 @@ GLib.set_application_name("Printers and Scanners")
 from src.cups_backend import CupsBackend
 from src.scanner_backend import ScannerBackend
 from ui.ui import MainWindow
-
 
 
 def main():
