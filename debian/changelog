@@ -1,3 +1,10 @@
+eta-printer-manager (1.0.3) unstable; urgency=medium
+
+  * Refactor gettext bindings using standard Python locale
+  * Add gir1.2-gtk-3.0 and gir1.2-notify-0.7 to package dependencies
+
+ -- AliOzbek <almozbk@outlook.com>  Tue, 04 Aug 2026 10:15:00 +0300
+
 eta-printer-manager (1.0.2) unstable; urgency=medium
 
   [ AliOzbek ]
