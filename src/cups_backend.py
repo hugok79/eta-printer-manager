@@ -83,31 +83,72 @@ class CupsBackend:
             logger.error(f"Failed to fetch PPD drivers: {e}")
             return {}
 
-    def find_best_ppd(self, model_name):
+    def find_best_ppd(self, model_name, device_uri=""):
         """
-        Scans the system for PPDs based on the 'ppd-make-and-model' field.
-        If a match is found, it returns that PPD; otherwise, it returns the default Generic PostScript PPD.
+        Scans the system for PPDs using normalized manufacturer/model matching
+        and multi-token fuzzy search.
         """
         default_ppd = "drv:///sample.drv/generic.ppd"
         if not model_name:
             return default_ppd
 
         ppds = self.get_ppds()
-        target = model_name.strip().lower()
+        if not ppds:
+            return default_ppd
 
-        # 1. Exact match check
+        import re
+
+        def normalize(text):
+            """Removes all non-alphanumeric characters for clean comparison."""
+            return re.sub(r'[^a-z0-9]', '', text.lower())
+
+        target_raw = model_name.strip().lower()
+        target_clean = normalize(model_name)
+
+        # 1. Exact Match Check
         for ppd_key, ppd_info in ppds.items():
             make_model = ppd_info.get("ppd-make-and-model", "").strip().lower()
-            if make_model == target:
+            make_model_clean = normalize(make_model)
+
+            if target_raw == make_model or target_clean == make_model_clean:
                 logger.info(f"Exact PPD match found for '{model_name}': {ppd_key}")
                 return ppd_key
 
-        # 2. Partial (inclusion) match check
+        # Remove noise words (like 'series', 'driver', 'printer') to extract core model code
+        noise_words = {"series", "driver", "cups", "printer", "hpcups", "brlaser", "pcl"}
+        target_words = set(re.findall(r'[a-z0-9]+', target_raw)) - noise_words
+
+        best_ppd = None
+        best_score = 0
+
+        # 2. Token-Based Fuzzy Search
         for ppd_key, ppd_info in ppds.items():
             make_model = ppd_info.get("ppd-make-and-model", "").strip().lower()
-            if target in make_model or make_model in target:
-                logger.info(f"Partial PPD match found for '{model_name}': {ppd_key}")
+            make_model_clean = normalize(make_model)
+
+            # Substring match (normalized)
+            if (len(target_clean) > 4 and target_clean in make_model_clean) or \
+               (len(make_model_clean) > 4 and make_model_clean in target_clean):
+                logger.info(f"Normalized substring PPD match found for '{model_name}': {ppd_key}")
                 return ppd_key
+
+            # Score by matching individual model tokens (e.g. "brother" and "l2700dw")
+            ppd_words = set(re.findall(r'[a-z0-9]+', make_model)) - noise_words
+            matching_tokens = target_words.intersection(ppd_words)
+
+            if len(matching_tokens) > best_score:
+                best_score = len(matching_tokens)
+                best_ppd = ppd_key
+
+        # If we matched at least 2 significant terms (e.g., mark + model code)
+        if best_ppd and best_score >= 2:
+            logger.info(f"Fuzzy PPD match found for '{model_name}': {best_ppd} (score: {best_score})")
+            return best_ppd
+
+        # 3. Fallback to Driverless IPP Everywhere for Network/IPP Printers
+        if device_uri and device_uri.startswith(("ipp://", "ipps://", "http://", "https://")):
+            logger.info(f"Network device detected. Using IPP Everywhere driverless fallback for '{model_name}'.")
+            return "everywhere"
 
         logger.info(f"No matching PPD found for '{model_name}'. Falling back to Generic PostScript.")
         return default_ppd
@@ -184,7 +225,7 @@ class CupsBackend:
         If no PPD is specified, it automatically finds the most suitable PPD based on the model name.
         """
         if not ppd_name:
-            ppd_name = self.find_best_ppd(model_name)
+            ppd_name = self.find_best_ppd(model_name, device_uri=uri)
 
         logger.info(f"Attempting to add printer via CUPS API: name='{name}', uri='{uri}', ppd='{ppd_name}'")
         try:

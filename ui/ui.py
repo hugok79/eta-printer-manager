@@ -13,6 +13,7 @@ from src.async_loader import AsyncLoader
 from src.cups_backend import CupsBackend
 from src.scanner_backend import ScannerBackend
 from src.notifications import NotificationManager
+from src.driver_installer import DynamicDriverInstaller
 from src.locale_config import _
 
 
@@ -474,9 +475,13 @@ class MainWindow:
 
         def on_response(gtk_dialog, response_id):
             if response_id == Gtk.ResponseType.OK:
-                # 'gtk_dialog' yerine wrapper nesnemiz olan 'add_dialog' üzerinden alıyoruz
                 name, uri, ppd = add_dialog.get_result()
                 if name and uri:
+                    
+                    # 1. Main Thread: Check and prompt for missing driver package
+                    DynamicDriverInstaller.check_and_install_driver(self, name)
+
+                    # 2. Worker Thread: Add printer via CUPS backend
                     def add_task():
                         result = (False, _("Backend error"))
                         if getattr(self.cups, 'add_printer', None):
