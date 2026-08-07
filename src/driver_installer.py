@@ -11,7 +11,10 @@ DRIVER_PACKAGE_MAP = {
     "hp": "hplip",
     "epson": "printer-driver-escpr",
     "canon": "printer-driver-c2esp",
-    "samsung": "printer-driver-splix"
+    "samsung": "printer-driver-splix",
+    "xerox": "printer-driver-splix",
+    "lexmark": "printer-driver-gutenprint",
+    "kyocera": "printer-driver-gutenprint"
 }
 
 class DynamicDriverInstaller:
