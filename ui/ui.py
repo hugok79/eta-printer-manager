@@ -477,10 +477,14 @@ class MainWindow:
             if response_id == Gtk.ResponseType.OK:
                 name, uri, ppd = add_dialog.get_result()
                 if name and uri:
-                    
+                
                     # 1. Main Thread: Check and prompt for missing driver package
-                    DynamicDriverInstaller.check_and_install_driver(self, name)
-
+                    if not DynamicDriverInstaller.check_and_install_driver(add_dialog, name):
+                        logger.info("Driver installation cancelled or failed. Aborting printer creation.")
+                        add_dialog.destroy()
+                        button.set_sensitive(True)
+                        return
+                
                     # 2. Worker Thread: Add printer via CUPS backend
                     def add_task():
                         result = (False, _("Backend error"))

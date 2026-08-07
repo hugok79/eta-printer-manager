@@ -45,18 +45,20 @@ class DynamicDriverInstaller:
     @classmethod
     def check_and_install_driver(cls, parent_window, make_and_model: str) -> bool:
         """Prompts the user via GTK3 dialog on main thread and installs missing package safely via apt."""
-        # 1. Yazıcı isminden Debian paket adını bul (Örn: "Brother HL-L2300D" -> "printer-driver-brlaser")
         pkg_name = cls.get_required_package(make_and_model)
 
-        # Sürücü paketi haritada yoksa veya zaten yüklüyse kuruluma gerek yok
         if not pkg_name or cls.is_package_installed(pkg_name):
             return True
 
-        # 2. GTK3 Onay Penceresini Aç
-        parent_widget = parent_window.window if hasattr(parent_window, 'window') else parent_window
+        top_win = parent_window
+        if hasattr(parent_window, 'get_toplevel'):
+            top_win = parent_window.get_toplevel()
+        if not isinstance(top_win, Gtk.Window):
+            top_win = None
+
         dialog = Gtk.MessageDialog(
-            transient_for=parent_widget,
-            flags=0,
+            transient_for=top_win,
+            flags=Gtk.DialogFlags.MODAL,
             message_type=Gtk.MessageType.QUESTION,
             buttons=Gtk.ButtonsType.YES_NO,
             text=_("Driver Package Required")
@@ -68,15 +70,15 @@ class DynamicDriverInstaller:
         response = dialog.run()
         dialog.destroy()
 
-        # 3. Kullanıcı Onay Verdiyse Gerçek Debian Paketini Kur
-        if response == Gtk.ResponseType.YES:
-            cmd = ["pkexec", "apt-get", "install", "-y", pkg_name]
-            try:
-                logger.info(f"Installing missing driver package '{pkg_name}' via apt...")
-                res = subprocess.run(cmd, check=True)
-                return res.returncode == 0
-            except Exception as e:
-                logger.error(f"Failed to install driver package {pkg_name}: {e}")
-                return False
+        if response != Gtk.ResponseType.YES:
+            logger.info("Driver installation cancelled by user.")
+            return False
 
-        return False
+        cmd = ["pkexec", "apt-get", "install", "-y", pkg_name]
+        try:
+            logger.info(f"Installing missing driver package '{pkg_name}' via apt...")
+            res = subprocess.run(cmd, check=True)
+            return res.returncode == 0
+        except Exception as e:
+            logger.error(f"Failed to install driver package {pkg_name}: {e}")
+            return False
