@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-03 13:43+0300\n"
-"PO-Revision-Date: 2026-08-03 14:51+0300\n"
+"POT-Creation-Date: 2026-08-07 09:34+0300\n"
+"PO-Revision-Date: 2026-08-07 11:19+0300\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
 "Language: tr\n"
@@ -19,112 +19,112 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Poedit 3.6\n"
 
-#: ui/ui.py:78
+#: ui/ui.py:80
 msgid "Generic PostScript Printer"
 msgstr "Genel PostScript Yazıcı"
 
-#: ui/ui.py:79
+#: ui/ui.py:81
 msgid "Generic PCL Laser Printer"
 msgstr "Genel PCL Lazer Yazıcı"
 
-#: ui/ui.py:80
+#: ui/ui.py:82
 msgid "IPP Everywhere (Driverless)"
 msgstr "IPP Everywhere (Sürücüsüz)"
 
-#: ui/ui.py:81
+#: ui/ui.py:83
 msgid "Raw Queue (No Driver)"
 msgstr "Ham Kuyruk (Sürücüsüz)"
 
-#: ui/ui.py:93
+#: ui/ui.py:95
 msgid "Select PPD File"
 msgstr "PPD Dosyası Seç"
 
-#: ui/ui.py:98 data/main_window.glade:156
+#: ui/ui.py:100 data/main_window.glade:156
 msgid "Cancel"
 msgstr "İptal"
 
-#: ui/ui.py:99
+#: ui/ui.py:101
 msgid "Open"
 msgstr "Aç"
 
-#: ui/ui.py:102
+#: ui/ui.py:104
 msgid "PPD Files (*.ppd, *.ppd.gz)"
 msgstr "PPD Dosyaları (*.ppd, *.ppd.gz)"
 
-#: ui/ui.py:157
+#: ui/ui.py:159
 msgid "No automatic devices found. Please add manually above."
 msgstr "Otomatik cihaz bulunamadı. Lütfen yukarıdan manuel olarak ekleyin."
 
-#: ui/ui.py:308
+#: ui/ui.py:310
 msgid "Printer"
 msgstr "Yazıcı"
 
-#: ui/ui.py:308
+#: ui/ui.py:310
 msgid "Scanner"
 msgstr "Tarayıcı"
 
-#: ui/ui.py:326 ui/ui.py:328
+#: ui/ui.py:328 ui/ui.py:330
 msgid "Open Queue"
 msgstr "Kuyruğu Aç"
 
-#: ui/ui.py:330
+#: ui/ui.py:332
 msgid "Test Page"
 msgstr "Test Sayfası"
 
-#: ui/ui.py:332
+#: ui/ui.py:334
 msgid "Send Test Page"
 msgstr "Test Sayfası Gönder"
 
-#: ui/ui.py:334
+#: ui/ui.py:336
 msgid "Default"
 msgstr "Varsayılan"
 
-#: ui/ui.py:334
+#: ui/ui.py:336
 msgid "Set as Default"
 msgstr "Varsayılan Yap"
 
-#: ui/ui.py:340
+#: ui/ui.py:342
 msgid "Set as Default Printer"
 msgstr "Varsayılan Yazıcı Yap"
 
-#: ui/ui.py:342
+#: ui/ui.py:344
 msgid "Pause"
 msgstr "Duraklat"
 
-#: ui/ui.py:344
+#: ui/ui.py:346
 msgid "Pause Printer"
 msgstr "Yazıcıyı Duraklat"
 
-#: ui/ui.py:346
+#: ui/ui.py:348
 msgid "Remove"
 msgstr "Kaldır"
 
-#: ui/ui.py:348
+#: ui/ui.py:350
 msgid "Remove Printer"
 msgstr "Yazıcıyı Kaldır"
 
-#: ui/ui.py:388
+#: ui/ui.py:390
 #, python-brace-format
 msgid "Do you want to perform '{1}' action for device '{0}'?"
 msgstr "'{0}' cihazı için '{1}' işlemini gerçekleştirmek istiyor musunuz?"
 
-#: ui/ui.py:479
+#: ui/ui.py:486
 msgid "Backend error"
 msgstr "Arka plan hatası"
 
-#: ui/ui.py:499
+#: ui/ui.py:506
 msgid "Success"
 msgstr "Başarılı"
 
-#: ui/ui.py:499
+#: ui/ui.py:506
 msgid "Device added successfully."
 msgstr "Cihaz başarıyla eklendi."
 
-#: ui/ui.py:504
+#: ui/ui.py:511
 msgid "Failed to Add Device"
 msgstr "Cihaz Eklenemedi"
 
-#: ui/ui.py:505
+#: ui/ui.py:512
 #, python-brace-format
 msgid ""
 "An error occurred while adding the printer:\n"
@@ -135,17 +135,32 @@ msgstr ""
 "\n"
 "{0}"
 
-#: ui/ui.py:505
+#: ui/ui.py:512
 msgid "Unknown error"
 msgstr "Bilinmeyen hata"
 
-#: ui/ui.py:555
+#: ui/ui.py:562
 msgid "Default Printer"
 msgstr "Varsayılan Yazıcı"
 
-#: ui/ui.py:555
+#: ui/ui.py:562
 msgid "Idle"
 msgstr "Boşta"
+
+#: src/driver_installer.py:62
+msgid "Driver Package Required"
+msgstr "Sürücü Paketi Gerekli"
+
+#: src/driver_installer.py:65
+#, python-brace-format
+msgid ""
+"The package '{0}' is required for '{1}'.\n"
+"\n"
+"Do you want to install it now?"
+msgstr ""
+"'{1}' cihazı için '{0}' sürücü paketinin kurulması gerekiyor.\n"
+"\n"
+"Şimdi kurmak ister misiniz?"
 
 #: data/main_window.glade:8 data/main_window.glade:15 data/main_window.glade:57
 msgid "Printers and Scanners"
