@@ -1,2 +1,3 @@
 #!/bin/bash
-cd /usr/share/pardus/eta-printer-manager && exec python3 -m src.main "$@"
+export PYTHONPATH=/usr/share/pardus/eta-printer-manager/src:/usr/share/pardus/eta-printer-manager:$PYTHONPATH
+cd /usr/share/pardus/eta-printer-manager && exec python3 src/main.py "$@"

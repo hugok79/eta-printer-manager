@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-07 09:34+0300\n"
+"POT-Creation-Date: 2026-08-10 16:02+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -106,23 +106,23 @@ msgstr ""
 msgid "Do you want to perform '{1}' action for device '{0}'?"
 msgstr ""
 
-#: ui/ui.py:486
+#: ui/ui.py:490
 msgid "Backend error"
 msgstr ""
 
-#: ui/ui.py:506
+#: ui/ui.py:510
 msgid "Success"
 msgstr ""
 
-#: ui/ui.py:506
+#: ui/ui.py:510
 msgid "Device added successfully."
 msgstr ""
 
-#: ui/ui.py:511
+#: ui/ui.py:515
 msgid "Failed to Add Device"
 msgstr ""
 
-#: ui/ui.py:512
+#: ui/ui.py:516
 #, python-brace-format
 msgid ""
 "An error occurred while adding the printer:\n"
@@ -130,23 +130,23 @@ msgid ""
 "{0}"
 msgstr ""
 
-#: ui/ui.py:512
+#: ui/ui.py:516
 msgid "Unknown error"
 msgstr ""
 
-#: ui/ui.py:562
+#: ui/ui.py:566
 msgid "Default Printer"
 msgstr ""
 
-#: ui/ui.py:562
+#: ui/ui.py:566
 msgid "Idle"
 msgstr ""
 
-#: src/driver_installer.py:62
+#: src/driver_installer.py:67
 msgid "Driver Package Required"
 msgstr ""
 
-#: src/driver_installer.py:65
+#: src/driver_installer.py:70
 #, python-brace-format
 msgid ""
 "The package '{0}' is required for '{1}'.\n"
@@ -155,7 +155,7 @@ msgid ""
 msgstr ""
 
 #: data/main_window.glade:8 data/main_window.glade:15 data/main_window.glade:57
-msgid "Printers and Scanners"
+msgid "ETA Printer Manager"
 msgstr ""
 
 #: data/main_window.glade:86 data/main_window.glade:108

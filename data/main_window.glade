@@ -5,14 +5,14 @@
   <!-- MAIN WINDOW -->
   <object class="GtkWindow" id="main_window">
     <property name="can-focus">False</property>
-    <property name="title" translatable="yes">Printers and Scanners</property>
+    <property name="title" translatable="yes">ETA Printer Manager</property>
     <property name="default-width">750</property>
     <property name="default-height">600</property>
     <child type="titlebar">
       <object class="GtkHeaderBar" id="headerbar">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
-        <property name="title" translatable="yes">Printers and Scanners</property>
+        <property name="title" translatable="yes">ETA Printer Manager</property>
         <property name="show-close-button">True</property>
         <child>
           <object class="GtkButton" id="btn_refresh">
@@ -54,7 +54,7 @@
               <object class="GtkLabel" id="lbl_main">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="label" translatable="yes">Printers and Scanners</property>
+                <property name="label" translatable="yes">ETA Printer Manager</property>
                 <property name="xalign">0</property>
                 <property name="margin-left">12</property>
                 <style>
