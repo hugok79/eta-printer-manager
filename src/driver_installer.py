@@ -1,7 +1,8 @@
 import gi
 gi.require_version('Gtk', '3.0')
 import subprocess
-from gi.repository import Gtk
+import threading  
+from gi.repository import Gtk, GLib  
 from src.logger import logger
 from src.locale_config import _
 
@@ -51,7 +52,7 @@ class DynamicDriverInstaller:
 
     @classmethod
     def check_and_install_driver(cls, parent_window, make_and_model: str) -> bool:
-        """Prompts the user via GTK3 dialog on main thread and installs all missing packages safely via apt."""
+        """Prompts user via GTK3 dialog and installs missing packages in a background thread with a non-blocking spinner."""
         required_pkgs = cls.get_required_packages(make_and_model)
         missing_pkgs = [pkg for pkg in required_pkgs if not cls.is_package_installed(pkg)]
 
@@ -66,6 +67,7 @@ class DynamicDriverInstaller:
 
         pkgs_str = ", ".join(missing_pkgs)
 
+        # 1. User Confirmation Dialog
         dialog = Gtk.MessageDialog(
             transient_for=top_win,
             flags=Gtk.DialogFlags.MODAL,
@@ -84,11 +86,54 @@ class DynamicDriverInstaller:
             logger.info("Driver installation cancelled by user.")
             return False
 
-        cmd = ["pkexec", "apt-get", "install", "-y"] + missing_pkgs
-        try:
-            logger.info(f"Installing missing driver package(s) '{pkgs_str}' via apt...")
-            res = subprocess.run(cmd, check=True)
-            return res.returncode == 0
-        except Exception as e:
-            logger.error(f"Failed to install driver package(s) {pkgs_str}: {e}")
-            return False
+        # 2. Create Progress Dialog with Spinner
+        prog_dialog = Gtk.Dialog(
+            title=_("Installing Driver..."),
+            transient_for=top_win,
+            flags=Gtk.DialogFlags.MODAL
+        )
+        prog_dialog.set_default_size(320, 120)
+        prog_dialog.set_deletable(False)
+
+        box = prog_dialog.get_content_area()
+        box.set_spacing(12)
+        box.set_border_width(20)
+
+        label = Gtk.Label(label=_("Downloading and installing required driver package(s),\nplease wait..."))
+        spinner = Gtk.Spinner()
+
+        box.pack_start(label, True, True, 0)
+        box.pack_start(spinner, True, True, 0)
+
+        prog_dialog.show_all()
+        spinner.start()
+
+        install_result = {"success": False}
+
+        # 3. Background Thread Worker Function
+        def install_worker():
+            cmd = ["pkexec", "apt-get", "install", "-y"] + missing_pkgs
+            try:
+                logger.info(f"Installing missing driver package(s) '{pkgs_str}' via apt...")
+                res = subprocess.run(cmd, check=True)
+                install_result["success"] = (res.returncode == 0)
+            except Exception as e:
+                logger.error(f"Failed to install driver package(s) {pkgs_str}: {e}")
+                install_result["success"] = False
+            finally:
+                GLib.idle_add(on_install_finished)
+
+        # 4. Callback to Cleanup UI on Main Thread
+        def on_install_finished():
+            spinner.stop()
+            prog_dialog.destroy()
+            Gtk.main_quit()
+
+        # Start Worker Thread
+        thread = threading.Thread(target=install_worker, daemon=True)
+        thread.start()
+
+        # Keep GTK Event Loop Running (Prevents UI Freeze)
+        Gtk.main()
+
+        return install_result["success"]
