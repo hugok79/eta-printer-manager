@@ -11,6 +11,7 @@ from gi.repository import Gtk, Gdk, GLib
 from src.logger import logger
 from src.async_loader import AsyncLoader
 from src.cups_backend import CupsBackend
+from src.queue_window import PrintQueueWindow
 from src.scanner_backend import ScannerBackend
 from src.notifications import NotificationManager
 from src.driver_installer import DynamicDriverInstaller
@@ -392,7 +393,8 @@ class DeviceCard(Gtk.Box):
             callback()
 
     def _action_open_queue(self):
-        self.parent_window.cups.open_queue(self.name)
+        win = PrintQueueWindow(printer_name=self.name, parent_window=self.parent_window)
+        win.show_all()
 
     def _action_print_test(self):
         if hasattr(self.parent_window.cups, 'print_test_page'):

@@ -2,6 +2,7 @@
 import os
 import cups
 import webbrowser
+import subprocess
 from src.logger import logger
 
 class CupsBackend:
@@ -293,3 +294,43 @@ class CupsBackend:
         except Exception as e:
             logger.debug(f"Could not fetch printer attributes for URI '{uri}': {e}")
             return {}
+
+    @staticmethod
+    def get_print_jobs(printer_name: str = None) -> list:
+        """Fetch active print jobs from CUPS via lpstat command."""
+        jobs = []
+        try:
+            # lpstat -o command lists open jobs
+            cmd = ["lpstat", "-o"]
+            if printer_name:
+                cmd.append(printer_name)
+                
+            res = subprocess.run(cmd, capture_output=True, text=True, check=False)
+            if res.returncode == 0 and res.stdout.strip():
+                for line in res.stdout.strip().split("\n"):
+                    # Output format: Printer-123 user size Wed 12 Aug 2026...
+                    parts = line.split()
+                    if len(parts) >= 3:
+                        job_id = parts[0]
+                        user = parts[1]
+                        size = parts[2]
+                        time_str = " ".join(parts[3:]) if len(parts) > 3 else ""
+                        jobs.append({
+                            "job_id": job_id,
+                            "user": user,
+                            "size": size,
+                            "time": time_str
+                        })
+        except Exception as e:
+            logger.error(f"Failed to fetch print jobs: {e}")
+        return jobs
+
+    @staticmethod
+    def cancel_print_job(job_id: str) -> bool:
+        """Cancel a specific print job by Job ID using cancel command."""
+        try:
+            res = subprocess.run(["cancel", job_id], capture_output=True, text=True, check=False)
+            return res.returncode == 0
+        except Exception as e:
+            logger.error(f"Failed to cancel job {job_id}: {e}")
+            return False
