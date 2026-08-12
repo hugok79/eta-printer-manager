@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-10 16:02+0300\n"
+"POT-Creation-Date: 2026-08-12 15:22+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,112 +17,112 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ui/ui.py:80
+#: ui/ui.py:81
 msgid "Generic PostScript Printer"
 msgstr ""
 
-#: ui/ui.py:81
+#: ui/ui.py:82
 msgid "Generic PCL Laser Printer"
 msgstr ""
 
-#: ui/ui.py:82
+#: ui/ui.py:83
 msgid "IPP Everywhere (Driverless)"
 msgstr ""
 
-#: ui/ui.py:83
+#: ui/ui.py:84
 msgid "Raw Queue (No Driver)"
 msgstr ""
 
-#: ui/ui.py:95
+#: ui/ui.py:96
 msgid "Select PPD File"
 msgstr ""
 
-#: ui/ui.py:100 data/main_window.glade:156
+#: ui/ui.py:101 data/main_window.glade:156
 msgid "Cancel"
 msgstr ""
 
-#: ui/ui.py:101
+#: ui/ui.py:102
 msgid "Open"
 msgstr ""
 
-#: ui/ui.py:104
+#: ui/ui.py:105
 msgid "PPD Files (*.ppd, *.ppd.gz)"
 msgstr ""
 
-#: ui/ui.py:159
+#: ui/ui.py:160
 msgid "No automatic devices found. Please add manually above."
 msgstr ""
 
-#: ui/ui.py:310
+#: ui/ui.py:311
 msgid "Printer"
 msgstr ""
 
-#: ui/ui.py:310
+#: ui/ui.py:311
 msgid "Scanner"
 msgstr ""
 
-#: ui/ui.py:328 ui/ui.py:330
+#: ui/ui.py:329 ui/ui.py:331
 msgid "Open Queue"
 msgstr ""
 
-#: ui/ui.py:332
+#: ui/ui.py:333
 msgid "Test Page"
 msgstr ""
 
-#: ui/ui.py:334
+#: ui/ui.py:335
 msgid "Send Test Page"
 msgstr ""
 
-#: ui/ui.py:336
+#: ui/ui.py:337
 msgid "Default"
 msgstr ""
 
-#: ui/ui.py:336
+#: ui/ui.py:337
 msgid "Set as Default"
 msgstr ""
 
-#: ui/ui.py:342
+#: ui/ui.py:343
 msgid "Set as Default Printer"
 msgstr ""
 
-#: ui/ui.py:344
+#: ui/ui.py:345
 msgid "Pause"
 msgstr ""
 
-#: ui/ui.py:346
+#: ui/ui.py:347
 msgid "Pause Printer"
 msgstr ""
 
-#: ui/ui.py:348
+#: ui/ui.py:349
 msgid "Remove"
 msgstr ""
 
-#: ui/ui.py:350
+#: ui/ui.py:351
 msgid "Remove Printer"
 msgstr ""
 
-#: ui/ui.py:390
+#: ui/ui.py:391
 #, python-brace-format
 msgid "Do you want to perform '{1}' action for device '{0}'?"
 msgstr ""
 
-#: ui/ui.py:490
+#: ui/ui.py:492
 msgid "Backend error"
 msgstr ""
 
-#: ui/ui.py:510
+#: ui/ui.py:512
 msgid "Success"
 msgstr ""
 
-#: ui/ui.py:510
+#: ui/ui.py:512
 msgid "Device added successfully."
 msgstr ""
 
-#: ui/ui.py:515
+#: ui/ui.py:517
 msgid "Failed to Add Device"
 msgstr ""
 
-#: ui/ui.py:516
+#: ui/ui.py:518
 #, python-brace-format
 msgid ""
 "An error occurred while adding the printer:\n"
@@ -130,28 +130,69 @@ msgid ""
 "{0}"
 msgstr ""
 
-#: ui/ui.py:516
+#: ui/ui.py:518
 msgid "Unknown error"
 msgstr ""
 
-#: ui/ui.py:566
+#: ui/ui.py:568
 msgid "Default Printer"
 msgstr ""
 
-#: ui/ui.py:566
+#: ui/ui.py:568
 msgid "Idle"
 msgstr ""
 
-#: src/driver_installer.py:67
+#: src/driver_installer.py:76
 msgid "Driver Package Required"
 msgstr ""
 
-#: src/driver_installer.py:70
+#: src/driver_installer.py:79
 #, python-brace-format
 msgid ""
-"The package '{0}' is required for '{1}'.\n"
+"The following package(s) are required for '{0}':\n"
 "\n"
-"Do you want to install it now?"
+"{1}\n"
+"\n"
+"Do you want to install them now?"
+msgstr ""
+
+#: src/driver_installer.py:91
+msgid "Installing Driver..."
+msgstr ""
+
+#: src/driver_installer.py:102
+msgid ""
+"Downloading and installing required driver package(s),\n"
+"please wait..."
+msgstr ""
+
+#: src/queue_window.py:11
+#, python-brace-format
+msgid "Print Queue - {0}"
+msgstr ""
+
+#: src/queue_window.py:41
+msgid "Job ID"
+msgstr ""
+
+#: src/queue_window.py:42
+msgid "User"
+msgstr ""
+
+#: src/queue_window.py:43
+msgid "Size"
+msgstr ""
+
+#: src/queue_window.py:44
+msgid "Submitted Time"
+msgstr ""
+
+#: src/queue_window.py:62
+msgid "Refresh"
+msgstr ""
+
+#: src/queue_window.py:66
+msgid "Cancel Job"
 msgstr ""
 
 #: data/main_window.glade:8 data/main_window.glade:15 data/main_window.glade:57
