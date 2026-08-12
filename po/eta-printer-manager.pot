@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-12 15:22+0300\n"
+"POT-Creation-Date: 2026-08-12 15:52+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -106,23 +106,40 @@ msgstr ""
 msgid "Do you want to perform '{1}' action for device '{0}'?"
 msgstr ""
 
-#: ui/ui.py:492
+#: ui/ui.py:493
+msgid "Missing Information"
+msgstr ""
+
+#: ui/ui.py:496
+msgid "Please fill in both Device Name and Connection Address (URI)."
+msgstr ""
+
+#: ui/ui.py:509
+msgid "Invalid Device Name"
+msgstr ""
+
+#: ui/ui.py:512
+msgid ""
+"Device name cannot contain spaces. Please use underscores (_) or join words."
+msgstr ""
+
+#: ui/ui.py:527
 msgid "Backend error"
 msgstr ""
 
-#: ui/ui.py:512
+#: ui/ui.py:547
 msgid "Success"
 msgstr ""
 
-#: ui/ui.py:512
+#: ui/ui.py:547
 msgid "Device added successfully."
 msgstr ""
 
-#: ui/ui.py:517
+#: ui/ui.py:552
 msgid "Failed to Add Device"
 msgstr ""
 
-#: ui/ui.py:518
+#: ui/ui.py:553
 #, python-brace-format
 msgid ""
 "An error occurred while adding the printer:\n"
@@ -130,15 +147,15 @@ msgid ""
 "{0}"
 msgstr ""
 
-#: ui/ui.py:518
+#: ui/ui.py:553
 msgid "Unknown error"
 msgstr ""
 
-#: ui/ui.py:568
+#: ui/ui.py:603
 msgid "Default Printer"
 msgstr ""
 
-#: ui/ui.py:568
+#: ui/ui.py:603
 msgid "Idle"
 msgstr ""
 

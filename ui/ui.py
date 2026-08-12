@@ -475,32 +475,73 @@ class MainWindow:
         button.set_sensitive(False)
         add_dialog = AddDeviceDialog(self, self.cups, self.scanner)
 
+        # Parent pencereyi güvenli şekilde çözelim (Gtk.Window türevi nesneye ulaşıyoruz)
+        parent_win = add_dialog if isinstance(add_dialog, Gtk.Window) else getattr(
+            add_dialog, 'dialog', getattr(add_dialog, 'window', getattr(self, 'window', None))
+        )
+
         def on_response(gtk_dialog, response_id):
             if response_id == Gtk.ResponseType.OK:
                 name, uri, ppd = add_dialog.get_result()
-                if name and uri:
                 
-                    # 1. Main Thread: Check and prompt for missing driver package
-                    if not DynamicDriverInstaller.check_and_install_driver(add_dialog, name):
-                        logger.info("Driver installation cancelled or failed. Aborting printer creation.")
-                        add_dialog.destroy()
-                        button.set_sensitive(True)
-                        return
-                
-                    # 2. Worker Thread: Add printer via CUPS backend
-                    def add_task():
-                        result = (False, _("Backend error"))
-                        if getattr(self.cups, 'add_printer', None):
-                            result = self.cups.add_printer(name, uri, ppd_name=ppd)
-                        GLib.idle_add(self._on_printer_added, result)
+                name = name.strip() if name else ""
+                uri = uri.strip() if uri else ""
 
-                    threading.Thread(target=add_task, daemon=True).start()
+                # --- FORM VALIDATION ---
+                # 1. Empty field check
+                if not name or not uri:
+                    dialog = Gtk.MessageDialog(
+                        transient_for=parent_win,
+                        flags=Gtk.DialogFlags.MODAL,
+                        message_type=Gtk.MessageType.WARNING,
+                        buttons=Gtk.ButtonsType.OK,
+                        text=_("Missing Information")
+                    )
+                    dialog.format_secondary_text(
+                        _("Please fill in both Device Name and Connection Address (URI).")
+                    )
+                    dialog.run()
+                    dialog.destroy()
+                    return
+
+                # 2. Space check
+                if " " in name:
+                    dialog = Gtk.MessageDialog(
+                        transient_for=parent_win,
+                        flags=Gtk.DialogFlags.MODAL,
+                        message_type=Gtk.MessageType.WARNING,
+                        buttons=Gtk.ButtonsType.OK,
+                        text=_("Invalid Device Name")
+                    )
+                    dialog.format_secondary_text(
+                        _("Device name cannot contain spaces. Please use underscores (_) or join words.")
+                    )
+                    dialog.run()
+                    dialog.destroy()
+                    return
+
+                # 1. Main Thread: Check and prompt for missing driver package
+                if not DynamicDriverInstaller.check_and_install_driver(add_dialog, name):
+                    logger.info("Driver installation cancelled or failed. Aborting printer creation.")
+                    add_dialog.destroy()
+                    button.set_sensitive(True)
+                    return
+            
+                # 2. Worker Thread: Add printer via CUPS backend
+                def add_task():
+                    result = (False, _("Backend error"))
+                    if getattr(self.cups, 'add_printer', None):
+                        result = self.cups.add_printer(name, uri, ppd_name=ppd)
+                    GLib.idle_add(self._on_printer_added, result)
+
+                threading.Thread(target=add_task, daemon=True).start()
 
             add_dialog.destroy()
             button.set_sensitive(True)
 
         add_dialog.connect("response", on_response)
         add_dialog.show_all()
+        
     def _on_printer_added(self, result):
         if isinstance(result, tuple):
             success, error_msg = result
