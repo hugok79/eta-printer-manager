@@ -35,22 +35,27 @@ class DynamicDriverInstaller:
             return False
 
     @staticmethod
-    def get_required_package(make_and_model: str) -> str:
-        """Determines required driver package based on printer brand."""
+    def get_required_packages(make_and_model: str) -> list:
+        """Determines all required driver packages based on printer brand keywords in string."""
         if not make_and_model:
-            return None
+            return []
+        
         make_model_lower = make_and_model.lower()
+        required_pkgs = []
+
         for brand, pkg in DRIVER_PACKAGE_MAP.items():
-            if brand in make_model_lower:
-                return pkg
-        return None
+            if brand in make_model_lower and pkg not in required_pkgs:
+                required_pkgs.append(pkg)
+                
+        return required_pkgs
 
     @classmethod
     def check_and_install_driver(cls, parent_window, make_and_model: str) -> bool:
-        """Prompts the user via GTK3 dialog on main thread and installs missing package safely via apt."""
-        pkg_name = cls.get_required_package(make_and_model)
+        """Prompts the user via GTK3 dialog on main thread and installs all missing packages safely via apt."""
+        required_pkgs = cls.get_required_packages(make_and_model)
+        missing_pkgs = [pkg for pkg in required_pkgs if not cls.is_package_installed(pkg)]
 
-        if not pkg_name or cls.is_package_installed(pkg_name):
+        if not missing_pkgs:
             return True
 
         top_win = parent_window
@@ -58,6 +63,8 @@ class DynamicDriverInstaller:
             top_win = parent_window.get_toplevel()
         if not isinstance(top_win, Gtk.Window):
             top_win = None
+
+        pkgs_str = ", ".join(missing_pkgs)
 
         dialog = Gtk.MessageDialog(
             transient_for=top_win,
@@ -67,7 +74,7 @@ class DynamicDriverInstaller:
             text=_("Driver Package Required")
         )
         dialog.format_secondary_text(
-            _("The package '{0}' is required for '{1}'.\n\nDo you want to install it now?").format(pkg_name, make_and_model)
+            _("The following package(s) are required for '{0}':\n\n{1}\n\nDo you want to install them now?").format(make_and_model, pkgs_str)
         )
 
         response = dialog.run()
@@ -77,11 +84,11 @@ class DynamicDriverInstaller:
             logger.info("Driver installation cancelled by user.")
             return False
 
-        cmd = ["pkexec", "apt-get", "install", "-y", pkg_name]
+        cmd = ["pkexec", "apt-get", "install", "-y"] + missing_pkgs
         try:
-            logger.info(f"Installing missing driver package '{pkg_name}' via apt...")
+            logger.info(f"Installing missing driver package(s) '{pkgs_str}' via apt...")
             res = subprocess.run(cmd, check=True)
             return res.returncode == 0
         except Exception as e:
-            logger.error(f"Failed to install driver package {pkg_name}: {e}")
+            logger.error(f"Failed to install driver package(s) {pkgs_str}: {e}")
             return False
