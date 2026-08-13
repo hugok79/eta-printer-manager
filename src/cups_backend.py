@@ -50,27 +50,40 @@ class CupsBackend:
                 which_jobs='not-completed',
                 requested_attributes=[
                     "job-id", "job-name", "job-state", "printer-uri", 
-                    "job-originating-user-name", "job-k-octets", "time-at-creation"
+                    "job-originating-user-name", "job-owner", "job-k-octets", "time-at-creation"
                 ]
             )
 
             job_list = []
             for job_id, details in jobs.items():
-                # Extract printer name from 'printer-uri' (e.g. ipp://localhost/printers/HP_LaserJet)
                 job_printer = details.get('printer-uri', '').split('/')[-1]
 
-                # Filter if a specific printer is requested
                 if printer_name and job_printer != printer_name:
                     continue
+
+                # Extract user name using multiple attribute fallbacks
+                user = details.get('job-originating-user-name') or details.get('job-owner') or details.get('user') or 'Unknown'
+
+                # Format Unix timestamp to human-readable date and time string
+                raw_time = details.get('time-at-creation') or details.get('time', 0)
+                if raw_time and isinstance(raw_time, (int, float)):
+                    from datetime import datetime
+                    formatted_time = datetime.fromtimestamp(raw_time).strftime("%Y-%m-%d %H:%M:%S")
+                else:
+                    formatted_time = str(raw_time)
+
+                # Format size with KB suffix
+                raw_size = details.get('job-k-octets') or details.get('size', 0)
+                formatted_size = f"{raw_size} KB" if isinstance(raw_size, (int, float)) else str(raw_size)
 
                 job_list.append({
                     "job_id": str(job_id),
                     "printer": job_printer,
                     "title": details.get('job-name', details.get('title', 'Unknown')),
-                    "user": details.get('job-originating-user-name', details.get('user', 'Unknown')),
-                    "size": details.get('job-k-octets', details.get('size', 0)),
+                    "user": user,
+                    "size": formatted_size,
                     "state": details.get('job-state', details.get('state', 0)),
-                    "time": details.get('time-at-creation', details.get('time', 0))
+                    "time": formatted_time
                 })
 
             return job_list
