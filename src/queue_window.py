@@ -1,6 +1,6 @@
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from gi.repository import Gtk, GLib
 from src.cups_backend import CupsBackend
 from src.locale_config import _
 
@@ -72,20 +72,60 @@ class PrintQueueWindow(Gtk.Window):
 
         vbox.pack_start(btn_box, False, False, 0)
 
+        # 1. Auto-Refresh Setup (Every 2 seconds)
+        self.timeout_id = GLib.timeout_add_seconds(2, self._auto_refresh_callback)
+        self.connect("destroy", self.on_window_destroy)
+
         # Initial Load
         self.refresh_queue()
 
+    def _auto_refresh_callback(self):
+        """GTK GLib timer callback."""
+        self.refresh_queue()
+        return True  # Keep timer alive
+
+    def on_window_destroy(self, widget):
+        """Stops the timer on window close to prevent memory leaks."""
+        if hasattr(self, 'timeout_id') and self.timeout_id:
+            GLib.source_remove(self.timeout_id)
+            self.timeout_id = None
+
     def refresh_queue(self):
-        """Reloads active jobs into the treeview."""
-        self.store.clear()
+        """Smart update: modifies treeview without clearing to prevent flicker and selection loss."""
         jobs = self.backend.get_print_jobs(self.printer_name)
-        for job in jobs:
-            self.store.append([
-                str(job.get("job_id", "")),
-                str(job.get("user", "")),
-                str(job.get("size", "")),
-                str(job.get("time", ""))
-            ])
+        new_jobs_map = {str(j["job_id"]): j for j in jobs}
+
+        # 1. Scan current items in store
+        existing_iters = {}
+        treeiter = self.store.get_iter_first()
+        while treeiter:
+            job_id = self.store.get_value(treeiter, 0)
+            existing_iters[job_id] = treeiter
+            treeiter = self.store.iter_next(treeiter)
+
+        # 2. Remove completed/cancelled jobs from store
+        for job_id, treeiter in list(existing_iters.items()):
+            if job_id not in new_jobs_map:
+                self.store.remove(treeiter)
+
+        # 3. Add new jobs or update existing ones
+        for job_id, job in new_jobs_map.items():
+            user = str(job.get("user", _("Unknown")))
+            size = str(job.get("size", ""))
+            time_str = str(job.get("time", ""))
+
+            if job_id in existing_iters:
+                # Update cells if they changed
+                treeiter = existing_iters[job_id]
+                if self.store.get_value(treeiter, 1) != user:
+                    self.store.set_value(treeiter, 1, user)
+                if self.store.get_value(treeiter, 2) != size:
+                    self.store.set_value(treeiter, 2, size)
+                if self.store.get_value(treeiter, 3) != time_str:
+                    self.store.set_value(treeiter, 3, time_str)
+            else:
+                # Append new job
+                self.store.append([job_id, user, size, time_str])
 
     def on_refresh_clicked(self, widget):
         self.refresh_queue()
