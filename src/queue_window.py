@@ -11,7 +11,9 @@ class PrintQueueWindow(Gtk.Window):
         super().__init__(title=_("Print Queue - {0}").format(printer_name))
         self.printer_name = printer_name
 
-        
+        # Initialize backend instance
+        self.backend = CupsBackend()
+
         if parent_window:
             top_win = parent_window
             if hasattr(parent_window, 'window'):
@@ -76,9 +78,14 @@ class PrintQueueWindow(Gtk.Window):
     def refresh_queue(self):
         """Reloads active jobs into the treeview."""
         self.store.clear()
-        jobs = CupsBackend.get_print_jobs(self.printer_name)
+        jobs = self.backend.get_print_jobs(self.printer_name)
         for job in jobs:
-            self.store.append([job["job_id"], job["user"], job["size"], job["time"]])
+            self.store.append([
+                str(job.get("job_id", "")),
+                str(job.get("user", "")),
+                str(job.get("size", "")),
+                str(job.get("time", ""))
+            ])
 
     def on_refresh_clicked(self, widget):
         self.refresh_queue()
@@ -88,5 +95,5 @@ class PrintQueueWindow(Gtk.Window):
         model, treeiter = selection.get_selected()
         if treeiter:
             job_id = model[treeiter][0]
-            if CupsBackend.cancel_print_job(job_id):
+            if self.backend.cancel_job(job_id):
                 self.refresh_queue()
