@@ -1,8 +1,8 @@
 import gi
 gi.require_version('Gtk', '3.0')
-import subprocess
-import threading  
-from gi.repository import Gtk, GLib  
+gi.require_version('Vte', '2.91')
+import subprocess 
+from gi.repository import Gtk, GLib, Vte, Pango
 from src.logger import logger
 from src.locale_config import _
 
@@ -86,54 +86,71 @@ class DynamicDriverInstaller:
             logger.info("Driver installation cancelled by user.")
             return False
 
-        # 2. Create Progress Dialog with Spinner
+        # 2. Create VTE Terminal Dialog
         prog_dialog = Gtk.Dialog(
-            title=_("Installing Driver..."),
+            title=_("Installing Driver Package..."),
             transient_for=top_win,
             flags=Gtk.DialogFlags.MODAL
         )
-        prog_dialog.set_default_size(320, 120)
-        prog_dialog.set_deletable(False)
+        prog_dialog.set_default_size(650, 400)
 
         box = prog_dialog.get_content_area()
-        box.set_spacing(12)
-        box.set_border_width(20)
+        box.set_spacing(10)
+        box.set_border_width(10)
 
-        label = Gtk.Label(label=_("Downloading and installing required driver package(s),\nplease wait..."))
-        spinner = Gtk.Spinner()
+        label = Gtk.Label(
+            label=_("Installing required driver package(s): {0}").format(pkgs_str)
+        )
+        label.set_xalign(0)
+        box.pack_start(label, False, False, 0)
 
-        box.pack_start(label, True, True, 0)
-        box.pack_start(spinner, True, True, 0)
+        # Create VTE Terminal Widget
+        terminal = Vte.Terminal()
+        font_desc = Pango.FontDescription("Monospace 10")
+        terminal.set_font(font_desc)
 
-        prog_dialog.show_all()
-        spinner.start()
+        scrolled_window = Gtk.ScrolledWindow()
+        scrolled_window.set_hexpand(True)
+        scrolled_window.set_vexpand(True)
+        scrolled_window.add(terminal)
+        box.pack_start(scrolled_window, True, True, 0)
 
         install_result = {"success": False}
 
-        # 3. Background Thread Worker Function
-        def install_worker():
-            cmd = ["pkexec", "apt-get", "install", "-y"] + missing_pkgs
-            try:
-                logger.info(f"Installing missing driver package(s) '{pkgs_str}' via apt...")
-                res = subprocess.run(cmd, check=True)
-                install_result["success"] = (res.returncode == 0)
-            except Exception as e:
-                logger.error(f"Failed to install driver package(s) {pkgs_str}: {e}")
-                install_result["success"] = False
-            finally:
-                GLib.idle_add(on_install_finished)
-
-        # 4. Callback to Cleanup UI on Main Thread
-        def on_install_finished():
-            spinner.stop()
+        # 3. Handle Child Process Termination
+        def on_child_exited(vte_term, status):
+            logger.info(f"VTE installation process exited with status code: {status}")
+            install_result["success"] = (status == 0)
             prog_dialog.destroy()
             Gtk.main_quit()
 
-        # Start Worker Thread
-        thread = threading.Thread(target=install_worker, daemon=True)
-        thread.start()
+        terminal.connect("child-exited", on_child_exited)
 
-        # Keep GTK Event Loop Running (Prevents UI Freeze)
+        prog_dialog.show_all()
+
+        # 4. Command Execution via pkexec and apt-get inside VTE
+        cmd = ["/usr/bin/pkexec", "/usr/bin/apt-get", "install", "-y"] + missing_pkgs
+
+        try:
+            logger.info(f"Spawning VTE process for driver installation: {pkgs_str}")
+            terminal.spawn_async(
+                Vte.PtyFlags.DEFAULT,
+                None,       # Working directory
+                cmd,        # Command list
+                None,       # Environment variables
+                GLib.SpawnFlags.DO_NOT_REAP_CHILD,
+                None, None, # Child setup
+                -1,         # Timeout
+                None,       # Cancellable
+                None,       # Callback
+                None        # User data
+            )
+        except Exception as e:
+            logger.error(f"Failed to spawn VTE process for driver installation: {e}")
+            prog_dialog.destroy()
+            return False
+
+        # Keep GTK Event Loop Running until process finishes
         Gtk.main()
 
         return install_result["success"]
