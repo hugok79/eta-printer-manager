@@ -10,6 +10,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GLib
 from src.logger import logger
 from src.async_loader import AsyncLoader
+from src.version import __version__
 from src.cups_backend import CupsBackend
 from src.queue_window import PrintQueueWindow
 from src.scanner_backend import ScannerBackend
@@ -437,6 +438,7 @@ class MainWindow:
         self.window = self.builder.get_object("main_window")
         self.btn_refresh = self.builder.get_object("btn_refresh")
         self.btn_add_device = self.builder.get_object("btn_add_device")
+        self.btn_about = self.builder.get_object("btn_about")
         self.device_list_box = self.builder.get_object("device_list_box")
 
         # Connect Window & Button Signals
@@ -444,7 +446,42 @@ class MainWindow:
         self.btn_refresh.connect("clicked", lambda x: self.load_devices())
         self.btn_add_device.connect("clicked", self._on_add_device_clicked)
 
+        # Connect About Us button signal
+        if self.btn_about:
+            self.btn_about.connect("clicked", self._on_about_clicked)
+
         GLib.idle_add(self.load_devices)
+
+    def _on_about_clicked(self, button):
+        """Creates and displays native GTK3 About Dialog."""
+        about_dialog = Gtk.AboutDialog()
+        
+        # Configure window modalities
+        about_dialog.set_transient_for(self.window)
+        about_dialog.set_modal(True)
+
+        # Set application metadata
+        about_dialog.set_program_name(_("ETA Printer Manager"))
+        about_dialog.set_version(__version__)
+        about_dialog.set_comments(_("Printer management tool for ETA and Pardus systems."))
+        about_dialog.set_website("https://www.pardus.org.tr")
+        about_dialog.set_website_label(_("Pardus Official Website"))
+        about_dialog.set_copyright("© TÜBİTAK BİLGEM / Pardus")
+        about_dialog.set_license_type(Gtk.License.GPL_3_0)
+        
+        # Set developers list
+        about_dialog.set_authors([
+            "Fatih Altun <dev@pardus.org.tr>",
+            "Ali İhsan Özbek <dev@pardus.org.tr>",
+            "Pardus Developers <dev@pardus.org.tr>"
+        ])
+
+        # Set system icon name
+        about_dialog.set_logo_icon_name("eta-printer-manager")
+
+        # Display dialog modally and clean up memory on close
+        about_dialog.run()
+        about_dialog.destroy()
 
     def connect(self, signal_name, callback, *args):
         """Proxies connect calls to the underlying GTK Window object."""

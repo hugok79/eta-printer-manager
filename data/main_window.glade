@@ -14,6 +14,28 @@
         <property name="can-focus">False</property>
         <property name="title" translatable="yes">ETA Printer Manager</property>
         <property name="show-close-button">True</property>
+        <!-- TOP LEFT: ABOUT US BUTTON -->
+        <child>
+          <object class="GtkButton" id="btn_about">
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="tooltip-text" translatable="yes">About Us</property>
+            <child>
+              <object class="GtkImage" id="img_about">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="icon-name">dialog-information-symbolic</property>
+              </object>
+            </child>
+            <style>
+              <class name="top-icon-btn"/>
+            </style>
+          </object>
+          <packing>
+            <property name="pack-type">start</property>
+          </packing>
+        </child>
+        <!-- TOP RIGHT: REFRESH BUTTON -->
         <child>
           <object class="GtkButton" id="btn_refresh">
             <property name="visible">True</property>
@@ -36,6 +58,7 @@
         </child>
       </object>
     </child>
+    <!-- MAIN BODY -->
     <child>
       <object class="GtkScrolledWindow" id="scroll_main">
         <property name="visible">True</property>
@@ -62,6 +85,7 @@
                 </style>
               </object>
             </child>
+            <!-- ADD DEVICE CARD -->
             <child>
               <object class="GtkBox" id="add_card">
                 <property name="visible">True</property>
