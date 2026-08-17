@@ -1,3 +1,17 @@
+eta-printer-manager (1.0.5) unstable; urgency=medium
+
+  [ AliOzbek ]
+  * Refactor print queue management to use native pycups instead of subprocess
+  * Replace background threading  with VTE terminal for driver installation
+  * Format print job details (timestamp, size) and improve username fallbacks
+  * Fix CupsBackend instantiation crash in PrintQueueWindow
+  * Implement smart auto-refresh using GLib timer in print queue window
+  * Add the README.md file
+  * Add native GTK3 About dialog and dynamic versioning
+  * Update Turkish translations for About dialog and app name
+
+ -- ali.ozbek <ali.ozbek@staj.tubitak.gov.tr>  Mon, 17 Aug 2026 16:16:21 +0300
+
 eta-printer-manager (1.0.4) unstable; urgency=medium
 
   * Refactor gettext bindings using standard Python locale
