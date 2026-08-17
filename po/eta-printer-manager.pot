@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-12 15:52+0300\n"
+"POT-Creation-Date: 2026-08-17 15:49+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,129 +17,142 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ui/ui.py:81
+#: ui/ui.py:82
 msgid "Generic PostScript Printer"
 msgstr ""
 
-#: ui/ui.py:82
+#: ui/ui.py:83
 msgid "Generic PCL Laser Printer"
 msgstr ""
 
-#: ui/ui.py:83
+#: ui/ui.py:84
 msgid "IPP Everywhere (Driverless)"
 msgstr ""
 
-#: ui/ui.py:84
+#: ui/ui.py:85
 msgid "Raw Queue (No Driver)"
 msgstr ""
 
-#: ui/ui.py:96
+#: ui/ui.py:97
 msgid "Select PPD File"
 msgstr ""
 
-#: ui/ui.py:101 data/main_window.glade:156
+#: ui/ui.py:102 data/main_window.glade:180
 msgid "Cancel"
 msgstr ""
 
-#: ui/ui.py:102
+#: ui/ui.py:103
 msgid "Open"
 msgstr ""
 
-#: ui/ui.py:105
+#: ui/ui.py:106
 msgid "PPD Files (*.ppd, *.ppd.gz)"
 msgstr ""
 
-#: ui/ui.py:160
+#: ui/ui.py:161
 msgid "No automatic devices found. Please add manually above."
 msgstr ""
 
-#: ui/ui.py:311
+#: ui/ui.py:312
 msgid "Printer"
 msgstr ""
 
-#: ui/ui.py:311
+#: ui/ui.py:312
 msgid "Scanner"
 msgstr ""
 
-#: ui/ui.py:329 ui/ui.py:331
+#: ui/ui.py:330 ui/ui.py:332
 msgid "Open Queue"
 msgstr ""
 
-#: ui/ui.py:333
+#: ui/ui.py:334
 msgid "Test Page"
 msgstr ""
 
-#: ui/ui.py:335
+#: ui/ui.py:336
 msgid "Send Test Page"
 msgstr ""
 
-#: ui/ui.py:337
+#: ui/ui.py:338
 msgid "Default"
 msgstr ""
 
-#: ui/ui.py:337
+#: ui/ui.py:338
 msgid "Set as Default"
 msgstr ""
 
-#: ui/ui.py:343
+#: ui/ui.py:344
 msgid "Set as Default Printer"
 msgstr ""
 
-#: ui/ui.py:345
+#: ui/ui.py:346
 msgid "Pause"
 msgstr ""
 
-#: ui/ui.py:347
+#: ui/ui.py:348
 msgid "Pause Printer"
 msgstr ""
 
-#: ui/ui.py:349
+#: ui/ui.py:350
 msgid "Remove"
 msgstr ""
 
-#: ui/ui.py:351
+#: ui/ui.py:352
 msgid "Remove Printer"
 msgstr ""
 
-#: ui/ui.py:391
+#: ui/ui.py:392
 #, python-brace-format
 msgid "Do you want to perform '{1}' action for device '{0}'?"
 msgstr ""
 
-#: ui/ui.py:493
+#: ui/ui.py:464 data/main_window.glade:8 data/main_window.glade:15
+#: data/main_window.glade:80
+msgid "ETA Printer Manager"
+msgstr ""
+
+#: ui/ui.py:466
+msgid "Printer management tool for ETA and Pardus systems."
+msgstr ""
+
+#: ui/ui.py:468
+msgid "Pardus Official Website"
+msgstr ""
+
+#: ui/ui.py:535
 msgid "Missing Information"
 msgstr ""
 
-#: ui/ui.py:496
+#: ui/ui.py:538
 msgid "Please fill in both Device Name and Connection Address (URI)."
 msgstr ""
 
-#: ui/ui.py:509
+#: ui/ui.py:551
 msgid "Invalid Device Name"
 msgstr ""
 
-#: ui/ui.py:512
+#: ui/ui.py:554
 msgid ""
 "Device name cannot contain spaces. Please use underscores (_) or join words."
 msgstr ""
 
-#: ui/ui.py:527
+#: ui/ui.py:569
 msgid "Backend error"
 msgstr ""
 
-#: ui/ui.py:547
+#: ui/ui.py:590
 msgid "Success"
 msgstr ""
 
-#: ui/ui.py:547
+#: ui/ui.py:590
 msgid "Device added successfully."
 msgstr ""
 
-#: ui/ui.py:552
+#: ui/ui.py:595
 msgid "Failed to Add Device"
 msgstr ""
 
-#: ui/ui.py:553
+#: ui/ui.py:596
 #, python-brace-format
 msgid ""
 "An error occurred while adding the printer:\n"
@@ -147,15 +160,15 @@ msgid ""
 "{0}"
 msgstr ""
 
-#: ui/ui.py:553
+#: ui/ui.py:596
 msgid "Unknown error"
 msgstr ""
 
-#: ui/ui.py:603
+#: ui/ui.py:646
 msgid "Default Printer"
 msgstr ""
 
-#: ui/ui.py:603
+#: ui/ui.py:646
 msgid "Idle"
 msgstr ""
 
@@ -174,13 +187,12 @@ msgid ""
 msgstr ""
 
 #: src/driver_installer.py:91
-msgid "Installing Driver..."
+msgid "Installing Driver Package..."
 msgstr ""
 
 #: src/driver_installer.py:102
-msgid ""
-"Downloading and installing required driver package(s),\n"
-"please wait..."
+#, python-brace-format
+msgid "Installing required driver package(s): {0}"
 msgstr ""
 
 #: src/queue_window.py:11
@@ -188,79 +200,83 @@ msgstr ""
 msgid "Print Queue - {0}"
 msgstr ""
 
-#: src/queue_window.py:41
+#: src/queue_window.py:43
 msgid "Job ID"
 msgstr ""
 
-#: src/queue_window.py:42
+#: src/queue_window.py:44
 msgid "User"
 msgstr ""
 
-#: src/queue_window.py:43
+#: src/queue_window.py:45
 msgid "Size"
 msgstr ""
 
-#: src/queue_window.py:44
+#: src/queue_window.py:46
 msgid "Submitted Time"
 msgstr ""
 
-#: src/queue_window.py:62
+#: src/queue_window.py:64
 msgid "Refresh"
 msgstr ""
 
-#: src/queue_window.py:66
+#: src/queue_window.py:68
 msgid "Cancel Job"
 msgstr ""
 
-#: data/main_window.glade:8 data/main_window.glade:15 data/main_window.glade:57
-msgid "ETA Printer Manager"
+#: src/queue_window.py:113
+msgid "Unknown"
 msgstr ""
 
-#: data/main_window.glade:86 data/main_window.glade:108
-#: data/main_window.glade:150
+#: data/main_window.glade:22
+msgid "About Us"
+msgstr ""
+
+#: data/main_window.glade:110 data/main_window.glade:132
+#: data/main_window.glade:174
 msgid "Add Device"
 msgstr ""
 
-#: data/main_window.glade:97
+#: data/main_window.glade:121
 msgid "Add a printer or scanner on network or USB"
 msgstr ""
 
-#: data/main_window.glade:125
+#: data/main_window.glade:149
 msgid "Your Devices"
 msgstr ""
 
-#: data/main_window.glade:166
+#: data/main_window.glade:190
 msgid "Add"
 msgstr ""
 
-#: data/main_window.glade:196
+#: data/main_window.glade:220
 msgid "Add Device Manually"
 msgstr ""
 
-#: data/main_window.glade:213
+#: data/main_window.glade:237
 msgid "Device Name:"
 msgstr ""
 
-#: data/main_window.glade:229
+#: data/main_window.glade:253
 msgid "e.g. Office_Printer"
 msgstr ""
 
-#: data/main_window.glade:240
+#: data/main_window.glade:264
 msgid "Connection Address (URI):"
 msgstr ""
 
-#: data/main_window.glade:256
+#: data/main_window.glade:280
 msgid "e.g. ipp://192.168.1.50/ipp/print"
 msgstr ""
 
-#: data/main_window.glade:267
+#: data/main_window.glade:291
 msgid "Driver (PPD):"
 msgstr ""
 
-#: data/main_window.glade:296
+#: data/main_window.glade:320
 msgid "Browse PPD..."
 msgstr ""
 
-#: data/main_window.glade:331
+#: data/main_window.glade:355
 msgid "Devices Found on Network and System"
 msgstr ""
