@@ -260,11 +260,9 @@ class CupsBackend:
     # ── Device discovery ─────────────────────────────────────────────
 
     def discover_devices(self):
-        conn = self._get_connection()
-        if not conn:
-            return {}
         try:
-            return conn.getDevices()
+            thread_safe_conn = cups.Connection()
+            return thread_safe_conn.getDevices()
         except Exception as e:
             logger.error(f"Failed to discover devices: {e}")
             return {}
