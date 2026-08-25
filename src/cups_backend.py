@@ -1,7 +1,6 @@
 # pyrefly: ignore [missing-import]
 import os
 import cups
-import webbrowser
 from src.logger import logger
 
 class CupsBackend:
@@ -26,13 +25,22 @@ class CupsBackend:
     def get_printers(self):
         logger.debug("Fetching printer list from CUPS...")
         try:
-            conn = cups.Connection()
+            conn = self._get_connection()
+            if not conn:
+                return {}
             printers = conn.getPrinters()
             logger.debug(f"Found {len(printers)} printers.")
             return printers
         except Exception as e:
             logger.exception("Failed to fetch printer list from CUPS.")
             return {}
+
+    @staticmethod
+    def get_printer_status_from_attrs(printer_attrs):
+        """Extracts human-readable status from CUPS printer-state attribute."""
+        state = printer_attrs.get('printer-state', 0)
+        state_map = {3: 'idle', 4: 'printing', 5: 'stopped'}
+        return state_map.get(state, 'unknown')
 
     def get_print_jobs(self, printer_name=None):
         """
@@ -141,7 +149,9 @@ class CupsBackend:
     def get_ppds(self):
         logger.debug("Fetching PPD list from CUPS...")
         try:
-            conn = cups.Connection()
+            conn = self._get_connection()
+            if not conn:
+                return {}
             ppds = conn.getPPDs()
             logger.debug(f"Found {len(ppds)} PPD drivers.")
             return ppds
@@ -305,31 +315,6 @@ class CupsBackend:
             err_msg = str(e)
             logger.exception(f"Unexpected error while adding printer '{name}': {err_msg}")
             return False, err_msg
-
-    def get_printer_state(self, printer_name):
-        conn = self._get_connection()
-        if not conn:
-            return "unknown"
-        try:
-            printers = conn.getPrinters()
-            if printer_name in printers:
-                state = printers[printer_name].get('printer-state', 0)
-                state_map = {3: 'idle', 4: 'printing', 5: 'stopped'}
-                return state_map.get(state, 'unknown')
-            return "unknown"
-        except Exception as e:
-            logger.error(f"Failed to get state for printer '{printer_name}': {e}")
-            return "unknown"
-
-    def open_queue(self, printer_name):
-        try:
-            url = f"http://localhost:631/printers/{printer_name}"
-            webbrowser.open(url)
-            logger.info(f"Opened print queue web page for '{printer_name}'.")
-            return True
-        except Exception as e:
-            logger.error(f"Failed to open print queue for '{printer_name}': {e}")
-            return False
 
     def get_printer_attributes_by_uri(self, uri):
         if not uri or not uri.startswith(("ipp://", "ipps://", "http://", "https://")):

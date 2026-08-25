@@ -61,10 +61,6 @@ class PrintQueueWindow(Gtk.Window):
         # Bottom Button Bar
         btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         
-        self.btn_refresh = Gtk.Button(label=_("Refresh"))
-        self.btn_refresh.connect("clicked", self.on_refresh_clicked)
-        btn_box.pack_start(self.btn_refresh, False, False, 0)
-
         self.btn_cancel_job = Gtk.Button(label=_("Cancel Job"))
         self.btn_cancel_job.get_style_context().add_class("destructive-action")
         self.btn_cancel_job.connect("clicked", self.on_cancel_job_clicked)
@@ -72,8 +68,8 @@ class PrintQueueWindow(Gtk.Window):
 
         vbox.pack_start(btn_box, False, False, 0)
 
-        # 1. Auto-Refresh Setup (Every 2 seconds)
-        self.timeout_id = GLib.timeout_add_seconds(2, self._auto_refresh_callback)
+        # 1. Auto-Refresh Setup (Every 1 second)
+        self.timeout_id = GLib.timeout_add_seconds(1, self._auto_refresh_callback)
         self.connect("destroy", self.on_window_destroy)
 
         # Initial Load
@@ -126,9 +122,6 @@ class PrintQueueWindow(Gtk.Window):
             else:
                 # Append new job
                 self.store.append([job_id, user, size, time_str])
-
-    def on_refresh_clicked(self, widget):
-        self.refresh_queue()
 
     def on_cancel_job_clicked(self, widget):
         selection = self.treeview.get_selection()

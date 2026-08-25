@@ -1,10 +1,6 @@
 import gi
 import os
 import threading
-import json
-import subprocess
-import sys
-import cups
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GLib
@@ -13,7 +9,6 @@ from src.async_loader import AsyncLoader
 from src.version import __version__
 from src.cups_backend import CupsBackend
 from src.queue_window import PrintQueueWindow
-from src.scanner_backend import ScannerBackend
 from src.notifications import NotificationManager
 from src.driver_installer import DynamicDriverInstaller
 from src.locale_config import _
@@ -56,9 +51,8 @@ def get_glade_path():
 
 class AddDeviceDialog:
     """Manual Addition + Automatic Network Scanning Dialog (Gtk.Builder)"""
-    def __init__(self, parent_window, cups_backend, scanner_backend):
+    def __init__(self, parent_window, cups_backend):
         self.cups_backend = cups_backend
-        self.scanner_backend = scanner_backend
 
         # Load Glade XML interface
         self.builder = Gtk.Builder()
@@ -116,34 +110,17 @@ class AddDeviceDialog:
         dialog.destroy()
 
     def _start_discovery(self):
-        """Network and system printers are scanned"""
         self.spinner.start()
 
         def scan_worker():
             discovered = []
-            py_script = (
-                "import cups, json\n"
-                "devs = []\n"
-                "try:\n"
-                "    conn = cups.Connection()\n"
-                "    cups_devs = conn.getDevices(timeout=5)\n"
-                "    for uri, info in cups_devs.items():\n"
-                "        name = info.get('device-make-and-model', info.get('device-info', uri.split('/')[-1]))\n"
-                "        devclass = info.get('device-class', '')\n"
-                "        if devclass != 'backend' and name.lower() != 'unknown':\n"
-                "            devs.append((name, uri, 'printer'))\n"
-                "except Exception:\n"
-                "    pass\n"
-                "print(json.dumps(devs))\n"
-            )
             try:
-                out = subprocess.check_output(
-                    [sys.executable, "-c", py_script],
-                    text=True,
-                    timeout=8,
-                    stderr=subprocess.DEVNULL
-                )
-                discovered = json.loads(out)
+                devices = self.cups_backend.discover_devices()
+                for uri, info in devices.items():
+                    name = info.get('device-make-and-model', info.get('device-info', uri.split('/')[-1]))
+                    devclass = info.get('device-class', '')
+                    if devclass != 'backend' and name.lower() != 'unknown':
+                        discovered.append((name, uri, 'printer'))
             except Exception:
                 pass
 
@@ -283,7 +260,7 @@ class AddDeviceDialog:
 
 class DeviceCard(Gtk.Box):
     """Dynamic Card Widget for Printers and Scanners"""
-    def __init__(self, name, device_type, status_text, parent_window, is_default=False):
+    def __init__(self, name, device_type, status_text, parent_window, is_default=False, is_paused=False):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=10)
 
         self.get_style_context().add_class("device-card")
@@ -291,6 +268,7 @@ class DeviceCard(Gtk.Box):
         self.device_type = device_type
         self.parent_window = parent_window
         self.is_default = is_default
+        self.is_paused = is_paused
 
         self.set_margin_left(6)
         self.set_margin_right(6)
@@ -343,9 +321,13 @@ class DeviceCard(Gtk.Box):
             else:
                 btn_default.connect("clicked", lambda x: self._on_action_clicked(_("Set as Default Printer"), self._action_set_default))
 
-            btn_pause = Gtk.Button(label=_("Pause"))
+            btn_pause_label = _("Resume") if is_paused else _("Pause")
+            btn_pause = Gtk.Button(label=btn_pause_label)
             btn_pause.get_style_context().add_class("btn-secondary")
-            btn_pause.connect("clicked", lambda x: self._on_action_clicked(_("Pause Printer"), self._action_pause))
+            if is_paused:
+                btn_pause.connect("clicked", lambda x: self._on_action_clicked(_("Resume Printer"), self._action_resume))
+            else:
+                btn_pause.connect("clicked", lambda x: self._on_action_clicked(_("Pause Printer"), self._action_pause))
 
             btn_delete = Gtk.Button(label=_("Remove"))
             btn_delete.get_style_context().add_class("btn-danger")
@@ -402,17 +384,16 @@ class DeviceCard(Gtk.Box):
             self.parent_window.cups.print_test_page(self.name)
 
     def _action_set_default(self):
-        try:
-            conn = cups.Connection()
-            conn.setDefault(self.name)
-        except Exception:
-            if hasattr(self.parent_window.cups, 'set_default_printer'):
-                self.parent_window.cups.set_default_printer(self.name)
-
+        self.parent_window.cups.set_default_printer(self.name)
         self.parent_window.load_devices()
 
     def _action_pause(self):
         self.parent_window.cups.pause_printer(self.name)
+        self.parent_window.load_devices()
+
+    def _action_resume(self):
+        self.parent_window.cups.resume_printer(self.name)
+        self.parent_window.load_devices()
 
     def _action_delete(self):
         if hasattr(self.parent_window.cups, 'delete_printer'):
@@ -422,11 +403,10 @@ class DeviceCard(Gtk.Box):
 
 class MainWindow:
     """Main Application Window loaded via Gtk.Builder (Glade XML)"""
-    def __init__(self, cups_backend=None, scanner_backend=None):
+    def __init__(self, cups_backend=None):
         load_css()
 
         self.cups = cups_backend if cups_backend else CupsBackend()
-        self.scanner = scanner_backend if scanner_backend else ScannerBackend()
         self.notifier = NotificationManager()
 
         # Load Glade UI with translation domain
@@ -436,19 +416,22 @@ class MainWindow:
 
         # Retrieve widget references from Builder
         self.window = self.builder.get_object("main_window")
-        self.btn_refresh = self.builder.get_object("btn_refresh")
         self.btn_add_device = self.builder.get_object("btn_add_device")
         self.btn_about = self.builder.get_object("btn_about")
         self.device_list_box = self.builder.get_object("device_list_box")
 
         # Connect Window & Button Signals
-        self.window.connect("destroy", Gtk.main_quit)
-        self.btn_refresh.connect("clicked", lambda x: self.load_devices())
+        self.window.connect("destroy", self._on_window_destroy)
         self.btn_add_device.connect("clicked", self._on_add_device_clicked)
 
         # Connect About Us button signal
         if self.btn_about:
             self.btn_about.connect("clicked", self._on_about_clicked)
+
+        # Auto-refresh: poll CUPS every 1s, only rebuild UI on state change
+        self._last_printer_state = None
+        self._poll_timer_id = GLib.timeout_add_seconds(1, self._poll_printer_state)
+        self._loading = False
 
         GLib.idle_add(self.load_devices)
 
@@ -491,9 +474,47 @@ class MainWindow:
         """Shows the window and all child widgets."""
         self.window.show_all()
 
-    def show(self):
-        """Shows the window."""
-        self.window.show()
+    def _on_window_destroy(self, widget):
+        """Cleans up poll timer on close."""
+        if hasattr(self, '_poll_timer_id') and self._poll_timer_id:
+            GLib.source_remove(self._poll_timer_id)
+            self._poll_timer_id = None
+        Gtk.main_quit()
+
+    def _build_printer_state_key(self, printers, default_printer):
+        """Builds a hashable snapshot of all printer names, states, and the default."""
+        if not isinstance(printers, dict):
+            return None
+        parts = []
+        for name in sorted(printers.keys()):
+            attrs = printers[name]
+            state = attrs.get('printer-state', 0)
+            parts.append(f"{name}:{state}")
+        parts.append(f"default:{default_printer}")
+        return "|".join(parts)
+
+    def _poll_printer_state(self):
+        """Fetches printers in background, rebuilds UI only if state actually changed."""
+        if self._loading:
+            return True
+        self._loading = True
+        AsyncLoader.run_async(
+            task_func=self._fetch_devices,
+            callback=self._on_poll_result
+        )
+        return True
+
+    def _on_poll_result(self, result, error):
+        """Callback for poll. Skips rebuild if state unchanged."""
+        self._loading = False
+        if error or not result:
+            return
+        printers, default_printer = result
+        key = self._build_printer_state_key(printers, default_printer)
+        if key == self._last_printer_state:
+            return
+        self._last_printer_state = key
+        self._rebuild_device_list(printers, default_printer)
 
     def show_error_dialog(self, title, message):
         """Shows error dialog to the user."""
@@ -510,7 +531,7 @@ class MainWindow:
 
     def _on_add_device_clicked(self, button):
         button.set_sensitive(False)
-        add_dialog = AddDeviceDialog(self, self.cups, self.scanner)
+        add_dialog = AddDeviceDialog(self, self.cups)
 
         # Parent pencereyi güvenli şekilde çözelim (Gtk.Window türevi nesneye ulaşıyoruz)
         parent_win = add_dialog if isinstance(add_dialog, Gtk.Window) else getattr(
@@ -598,8 +619,10 @@ class MainWindow:
         return GLib.SOURCE_REMOVE
 
     def load_devices(self):
-        if hasattr(self, 'btn_refresh'):
-            self.btn_refresh.set_sensitive(False)
+        """Clears list and fetches devices in background. Skips if a fetch is already in-flight."""
+        if self._loading:
+            return GLib.SOURCE_REMOVE
+        self._loading = True
 
         for child in self.device_list_box.get_children():
             self.device_list_box.remove(child)
@@ -613,38 +636,37 @@ class MainWindow:
 
     def _fetch_devices(self):
         printers = self.cups.get_printers()
-        default_printer = None
+        default_printer = self.cups.get_default_printer()
+        return printers, default_printer
 
-        try:
-            conn = cups.Connection()
-            default_printer = conn.getDefault()
-        except Exception:
-            if hasattr(self.cups, 'get_default_printer'):
-                default_printer = self.cups.get_default_printer()
-
-        return printers, {}, default_printer
-
-    def _on_devices_loaded(self, result, error):
-        if hasattr(self, 'btn_refresh'):
-            def reenable_refresh():
-                if hasattr(self, 'btn_refresh') and self.btn_refresh:
-                    self.btn_refresh.set_sensitive(True)
-                    logger.debug("Refresh button re-enabled after 5 seconds cooldown.")
-                return False
-
-            GLib.timeout_add_seconds(5, reenable_refresh)
-
-        if error:
-            logger.error(f"Error loading devices: {error}")
-            return
-
-        printers, scanners, default_printer = result
+    def _rebuild_device_list(self, printers, default_printer):
+        """Clears and rebuilds the device card list from printer data."""
+        for child in self.device_list_box.get_children():
+            self.device_list_box.remove(child)
+            child.destroy()
 
         if isinstance(printers, dict):
-            for name in printers.keys():
+            for name, attrs in printers.items():
                 is_default = (name == default_printer)
-                status_text = _("Default Printer") if is_default else _("Idle")
-                card = DeviceCard(name, "printer", status_text, self, is_default=is_default)
+                status = CupsBackend.get_printer_status_from_attrs(attrs)
+                is_paused = (status == 'stopped')
+                if is_default:
+                    status_text = _("Default Printer")
+                elif is_paused:
+                    status_text = _("Paused")
+                else:
+                    status_text = _("Idle")
+                card = DeviceCard(name, "printer", status_text, self, is_default=is_default, is_paused=is_paused)
                 self.device_list_box.pack_start(card, False, False, 0)
 
         self.device_list_box.show_all()
+
+    def _on_devices_loaded(self, result, error):
+        """Callback for manual load_devices(). Always rebuilds."""
+        self._loading = False
+        if error:
+            logger.error(f"Error loading devices: {error}")
+            return
+        printers, default_printer = result
+        self._last_printer_state = self._build_printer_state_key(printers, default_printer)
+        self._rebuild_device_list(printers, default_printer)

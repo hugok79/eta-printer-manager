@@ -16,21 +16,15 @@ GLib.set_application_name("Printers and Scanners")
 
 # Module imports
 from src.cups_backend import CupsBackend
-from src.scanner_backend import ScannerBackend
 from ui.ui import MainWindow
 
 
 def main():
-    # Initialize motors
     cups_backend = CupsBackend()
-    scanner_backend = ScannerBackend()
 
-    # Start main interface and inject motors
-    win = MainWindow(cups_backend, scanner_backend)
-    win.connect("destroy", Gtk.main_quit)
+    win = MainWindow(cups_backend)
     win.show_all()
 
-    # GTK Main Loop
     Gtk.main()
 
 if __name__ == "__main__":

@@ -110,22 +110,14 @@ listbox row:selected {
 
 /* Main Action Button (Blue - Add Device) */
 .btn-primary {
-    background-color: @theme_selected_bg_color;
-    color: @theme_selected_fg_color;
     font-weight: 600;
     border-radius: 6px;
     padding: 8px 18px;
     border: none;
 }
 
-.btn-primary:hover {
-    background-color: alpha(@theme_selected_bg_color, 0.85);
-}
-
 /* Secondary Buttons (Cancel, Browse PPD, Open Queue, etc.) */
 .btn-secondary {
-    background-color: alpha(@theme_fg_color, 0.1);
-    color: @theme_fg_color;
     border: 1px solid @borders;
     border-radius: 6px;
     padding: 6px 14px;
@@ -133,26 +125,11 @@ listbox row:selected {
     font-weight: 500;
 }
 
-.btn-secondary:hover {
-    background-color: alpha(@theme_fg_color, 0.2);
-}
-
 /* Delete/Remove Button */
 .btn-danger {
-    background-color: #c42b1c;
-    color: #ffffff;
     border: none;
     border-radius: 6px;
     padding: 6px 14px;
     font-size: 13px;
     font-weight: 500;
-}
-
-.btn-danger:hover {
-    background-color: #a82317;
-}
-
-/* Blue Icon */
-.blue-icon {
-    color: @theme_selected_bg_color;
 }

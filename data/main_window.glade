@@ -35,27 +35,6 @@
             <property name="pack-type">start</property>
           </packing>
         </child>
-        <!-- TOP RIGHT: REFRESH BUTTON -->
-        <child>
-          <object class="GtkButton" id="btn_refresh">
-            <property name="visible">True</property>
-            <property name="can-focus">True</property>
-            <property name="receives-default">True</property>
-            <child>
-              <object class="GtkImage" id="img_refresh">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
-                <property name="icon-name">view-refresh-symbolic</property>
-              </object>
-            </child>
-            <style>
-              <class name="top-icon-btn"/>
-            </style>
-          </object>
-          <packing>
-            <property name="pack-type">end</property>
-          </packing>
-        </child>
       </object>
     </child>
     <!-- MAIN BODY -->
