@@ -1,3 +1,18 @@
+eta-printer-manager (1.0.6) unstable; urgency=medium
+
+  [ Ali Riza KESKIN ]
+  * cleanup and fixes
+  * cleanup code
+  * use fresh cups.Connection() per call.
+  * select ppd from list option added
+
+  [ AliOzbek ]
+  * Fix Segmentation fault in discover_devices
+  * Integrate PPD selector window into add device dialog
+  * Update Turkish translations and translation template
+
+ -- ali.ozbek <ali.ozbek@staj.tubitak.gov.tr>  Wed, 26 Aug 2026 11:32:12 +0300
+
 eta-printer-manager (1.0.5) unstable; urgency=medium
 
   [ AliOzbek ]
