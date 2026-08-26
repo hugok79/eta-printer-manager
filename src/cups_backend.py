@@ -12,26 +12,10 @@ PRINTER_STATE_MAP = {3: "idle", 4: "printing", 5: "stopped"}
 
 class CupsBackend:
 
-    def __init__(self):
-        try:
-            self.conn = cups.Connection()
-        except Exception as e:
-            logger.error(f"CUPS connection error: {e}")
-            self.conn = None
-
-    def _get_connection(self):
-        if self.conn:
-            return self.conn
-        try:
-            return cups.Connection()
-        except Exception as e:
-            logger.error(f"Failed to establish CUPS connection: {e}")
-            return None
-
     # ── Printer management ───────────────────────────────────────────
 
     def get_printers(self):
-        conn = self._get_connection()
+        conn = cups.Connection()
         if not conn:
             return {}
         try:
@@ -43,7 +27,7 @@ class CupsBackend:
     def add_printer(self, name, uri, model_name=None, ppd_name=None):
         if not ppd_name:
             ppd_name = self.find_best_ppd(model_name, device_uri=uri)
-        conn = self._get_connection()
+        conn = cups.Connection()
         if not conn:
             return False, "No CUPS connection"
         try:
@@ -61,7 +45,7 @@ class CupsBackend:
             return False, str(e)
 
     def delete_printer(self, printer_name):
-        conn = self._get_connection()
+        conn = cups.Connection()
         if not conn:
             return False
         try:
@@ -72,7 +56,7 @@ class CupsBackend:
             return False
 
     def pause_printer(self, printer_name):
-        conn = self._get_connection()
+        conn = cups.Connection()
         if not conn:
             return False
         try:
@@ -83,7 +67,7 @@ class CupsBackend:
             return False
 
     def resume_printer(self, printer_name):
-        conn = self._get_connection()
+        conn = cups.Connection()
         if not conn:
             return False
         try:
@@ -94,7 +78,7 @@ class CupsBackend:
             return False
 
     def print_test_page(self, printer_name):
-        conn = self._get_connection()
+        conn = cups.Connection()
         if not conn:
             return False
         test_file = "/usr/share/cups/data/testprint"
@@ -112,7 +96,7 @@ class CupsBackend:
     # ── Default printer ──────────────────────────────────────────────
 
     def get_default_printer(self):
-        conn = self._get_connection()
+        conn = cups.Connection()
         if not conn:
             return None
         try:
@@ -122,7 +106,7 @@ class CupsBackend:
             return None
 
     def set_default_printer(self, printer_name):
-        conn = self._get_connection()
+        conn = cups.Connection()
         if not conn:
             return False
         try:
@@ -135,7 +119,7 @@ class CupsBackend:
     # ── Print jobs ───────────────────────────────────────────────────
 
     def get_print_jobs(self, printer_name=None):
-        conn = self._get_connection()
+        conn = cups.Connection()
         if not conn:
             return []
         try:
@@ -184,7 +168,7 @@ class CupsBackend:
         return result
 
     def cancel_job(self, job_id):
-        conn = self._get_connection()
+        conn = cups.Connection()
         if not conn:
             return False
         try:
@@ -202,7 +186,7 @@ class CupsBackend:
     # ── PPD / driver matching ────────────────────────────────────────
 
     def get_ppds(self):
-        conn = self._get_connection()
+        conn = cups.Connection()
         if not conn:
             return {}
         try:
@@ -261,8 +245,8 @@ class CupsBackend:
 
     def discover_devices(self):
         try:
-            thread_safe_conn = cups.Connection()
-            return thread_safe_conn.getDevices()
+            conn = cups.Connection()
+            return conn.getDevices()
         except Exception as e:
             logger.error(f"Failed to discover devices: {e}")
             return {}
@@ -270,7 +254,7 @@ class CupsBackend:
     def get_printer_attributes_by_uri(self, uri):
         if not uri or not uri.startswith(("ipp://", "ipps://", "http://", "https://")):
             return {}
-        conn = self._get_connection()
+        conn = cups.Connection()
         if not conn:
             return {}
         try:
