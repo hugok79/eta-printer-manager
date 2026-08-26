@@ -9,6 +9,7 @@ from src.async_loader import AsyncLoader
 from src.cups_backend import CupsBackend
 from src.driver_installer import DynamicDriverInstaller
 from src.locale_config import _
+from src.ppd_selector import PPDSelectorWindow
 from src.logger import logger
 from src.notifications import NotificationManager
 from src.queue_window import PrintQueueWindow
@@ -105,27 +106,14 @@ class AddDeviceDialog:
         GLib.idle_add(self._start_discovery)
 
     def _on_browse_ppd(self, _button):
-        dialog = Gtk.FileChooserDialog(
-            title=_("Select PPD File"),
-            parent=self.dialog,
-            action=Gtk.FileChooserAction.OPEN,
-        )
-        dialog.add_buttons(
-            _("Cancel"), Gtk.ResponseType.CANCEL,
-            _("Open"), Gtk.ResponseType.OK,
-        )
-        f = Gtk.FileFilter()
-        f.set_name(_("PPD Files (*.ppd, *.ppd.gz)"))
-        f.add_pattern("*.ppd")
-        f.add_pattern("*.ppd.gz")
-        dialog.add_filter(f)
+        def on_ppd_selected(ppd_name, model_name):
+            if ppd_name:
+                label = f"★ {model_name}"
+                self.combo_driver.append(ppd_name, label)
+                self.combo_driver.set_active_id(ppd_name)
 
-        if dialog.run() == Gtk.ResponseType.OK:
-            path = dialog.get_filename()
-            if path:
-                self.combo_driver.append(path, os.path.basename(path))
-                self.combo_driver.set_active_id(path)
-        dialog.destroy()
+        selector_win = PPDSelectorWindow(parent_window=self.dialog, on_select=on_ppd_selected)
+        selector_win.show_all()
 
     def _start_discovery(self):
         self.spinner.start()
